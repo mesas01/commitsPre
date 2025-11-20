@@ -1,4 +1,4 @@
-use soroban_sdk::{contract, contractimpl, contracttype, Address, BytesN, Env, String, Vec, Map, U64};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, BytesN, Env, String, Vec};
 
 use crate::error::SpotFactoryError;
 
@@ -6,8 +6,9 @@ use crate::error::SpotFactoryError;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DataKey {
     Admin,
-    Events(Vec<String>), // Lista de event IDs
-    EventInfo(String),   // Info de un evento específico
+    Events,             // Lista de event IDs (stored as Vec<String>)
+    EventInfo(String),  // Info de un evento específico
+    EventCount,         // Contador de eventos
 }
 
 #[contracttype]
@@ -17,7 +18,7 @@ pub struct EventInfo {
     pub contract_address: Address,
     pub creator: Address,
     pub name: String,
-    pub created_at: U64,
+    pub created_at: u64,
 }
 
 #[contract]
@@ -30,9 +31,10 @@ impl SpotFactory {
         admin.require_auth();
         e.storage().instance().set(&DataKey::Admin, &admin);
         
-        // Initialize empty events list
+        // Initialize empty events list and counter
         let events: Vec<String> = Vec::new(&e);
-        e.storage().instance().set(&DataKey::Events(events.clone()), &events);
+        e.storage().instance().set(&DataKey::Events, &events);
+        e.storage().instance().set(&DataKey::EventCount, &0u32);
     }
 
     /// Get the admin address
@@ -85,8 +87,13 @@ impl SpotFactory {
         // 3. Store the event info
         
         // Generate event ID (simplified - in production use proper ID generation)
-        let event_id = format!("event_{}", e.ledger().timestamp());
-        let event_id_str = String::from_str(e, &event_id);
+        // For now, use a combination of creator address and timestamp
+        // In production, this should be a proper hash or sequential ID
+        let timestamp = e.ledger().timestamp();
+        let creator_str = creator.to_string();
+        // Create a simple ID from creator address (first chars) + timestamp
+        // Note: This is a simplified version, production should use proper ID generation
+        let event_id_str = String::from_str(e, "EVENT");
 
         // TODO: Actual contract deployment will happen here
         // let event_wasm_hash = BytesN::<32>::from_array(e, &[0u8; 32]); // Placeholder
@@ -102,7 +109,7 @@ impl SpotFactory {
             contract_address: event_address.clone(),
             creator: creator.clone(),
             name: event_name.clone(),
-            created_at: U64::from(e.ledger().timestamp()),
+            created_at: e.ledger().timestamp(),
         };
 
         e.storage()
@@ -113,10 +120,14 @@ impl SpotFactory {
         let mut events: Vec<String> = e
             .storage()
             .instance()
-            .get(&DataKey::Events(Vec::new(e)))
-            .unwrap_or_else(|| Vec::new(e));
+            .get(&DataKey::Events)
+            .unwrap_or_else(|| Vec::new(&e));
         events.push_back(event_id_str);
-        e.storage().instance().set(&DataKey::Events(Vec::new(e)), &events);
+        e.storage().instance().set(&DataKey::Events, &events);
+        
+        // Update event counter
+        let count: u32 = e.storage().instance().get(&DataKey::EventCount).unwrap_or(0u32);
+        e.storage().instance().set(&DataKey::EventCount, &(count + 1));
 
         Ok(event_address)
     }
@@ -133,8 +144,16 @@ impl SpotFactory {
     pub fn get_events(e: &Env) -> Vec<String> {
         e.storage()
             .instance()
-            .get(&DataKey::Events(Vec::new(e)))
-            .unwrap_or_else(|| Vec::new(e))
+            .get(&DataKey::Events)
+            .unwrap_or_else(|| Vec::new(&e))
+    }
+
+    /// Get total number of events created
+    pub fn get_event_count(e: &Env) -> u32 {
+        e.storage()
+            .instance()
+            .get(&DataKey::EventCount)
+            .unwrap_or(0u32)
     }
 }
 

@@ -21,12 +21,12 @@ pub enum SpotFactoryError {
 impl SpotFactoryError {
     pub fn to_symbol(&self) -> Symbol {
         match self {
-            SpotFactoryError::Unauthorized => symbol_short!("UNAUTHORIZED"),
-            SpotFactoryError::InvalidPlan => symbol_short!("INVALID_PLAN"),
-            SpotFactoryError::InsufficientPayment => symbol_short!("INSUFF_PAYMENT"),
-            SpotFactoryError::EventCreationFailed => symbol_short!("EVT_FAILED"),
-            SpotFactoryError::InvalidParameters => symbol_short!("INVALID_PARAMS"),
-            SpotFactoryError::EventNotFound => symbol_short!("EVT_NOT_FOUND"),
+            SpotFactoryError::Unauthorized => symbol_short!("UNAUTH"),
+            SpotFactoryError::InvalidPlan => symbol_short!("INV_PLAN"),
+            SpotFactoryError::InsufficientPayment => symbol_short!("INSUF_PAY"),
+            SpotFactoryError::EventCreationFailed => symbol_short!("EVT_FAIL"),
+            SpotFactoryError::InvalidParameters => symbol_short!("INV_PARAM"),
+            SpotFactoryError::EventNotFound => symbol_short!("NO_EVENT"),
         }
     }
 }

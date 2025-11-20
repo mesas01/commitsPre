@@ -23,13 +23,13 @@ pub enum SpotEventError {
 impl SpotEventError {
     pub fn to_symbol(&self) -> Symbol {
         match self {
-            SpotEventError::Unauthorized => symbol_short!("UNAUTHORIZED"),
-            SpotEventError::AlreadyMinted => symbol_short!("ALREADY_MINTED"),
-            SpotEventError::LimitExceeded => symbol_short!("LIMIT_EXCEEDED"),
-            SpotEventError::ClaimPeriodEnded => symbol_short!("CLAIM_ENDED"),
-            SpotEventError::ClaimPeriodNotStarted => symbol_short!("CLAIM_NOT_STARTED"),
-            SpotEventError::InvalidParameters => symbol_short!("INVALID_PARAMS"),
-            SpotEventError::RoleNotFound => symbol_short!("ROLE_NOT_FOUND"),
+            SpotEventError::Unauthorized => symbol_short!("UNAUTH"),
+            SpotEventError::AlreadyMinted => symbol_short!("MINTED"),
+            SpotEventError::LimitExceeded => symbol_short!("LIMIT_EX"),
+            SpotEventError::ClaimPeriodEnded => symbol_short!("CLAIM_END"),
+            SpotEventError::ClaimPeriodNotStarted => symbol_short!("NOT_START"),
+            SpotEventError::InvalidParameters => symbol_short!("INV_PARAM"),
+            SpotEventError::RoleNotFound => symbol_short!("NO_ROLE"),
         }
     }
 }

@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, U64};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String};
 
 mod contract;
 mod error;
