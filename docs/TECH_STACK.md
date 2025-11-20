@@ -1,8 +1,8 @@
-# Tech Stack - POAP Stellar
+# Tech Stack - SPOT (Stellar Proof of Togetherness)
 
 ## Resumen Ejecutivo
 
-Sistema de POAPs (Proof of Attendance Protocol) construido sobre Stellar Blockchain usando Soroban Smart Contracts, con frontend React/Next.js y backend Firebase.
+Sistema de SPOTs (Stellar Proof of Togetherness) construido sobre Stellar Blockchain usando Soroban Smart Contracts, con frontend React/Next.js y backend Firebase.
 
 ## Stack Tecnológico
 
@@ -31,7 +31,7 @@ Sistema de POAPs (Proof of Attendance Protocol) construido sobre Stellar Blockch
    - Validación de planes y pagos
 
 2. **Event Contract** (Template)
-   - Lógica de mint de POAPs
+   - Lógica de mint de SPOTs
    - Control de permisos (Owner, Admin, Minter, Viewer)
    - Validación de límites y fechas
    - Funciones de burn (quemar no reclamados)
@@ -81,7 +81,7 @@ Sistema de POAPs (Proof of Attendance Protocol) construido sobre Stellar Blockch
    - Sistema de créditos
 
 2. **Firebase Storage**
-   - Almacenamiento de imágenes de POAPs
+   - Almacenamiento de imágenes de SPOTs
    - Servir archivos JSON de metadata
    - CDN para imágenes
 
@@ -131,7 +131,7 @@ Sistema de POAPs (Proof of Attendance Protocol) construido sobre Stellar Blockch
 ## Estructura de Proyecto
 
 ```
-poap-stellar/
+spot-stellar/
 ├── contracts/              # Smart Contracts (Rust)
 │   ├── factory/           # Factory Contract
 │   ├── event/             # Event Contract Template
@@ -170,7 +170,7 @@ poap-stellar/
 
 **Off-Chain:**
 - JSON completo con toda la metadata en Firebase Storage o IPFS
-- Imagen del POAP en Firebase Storage
+- Imagen del SPOT en Firebase Storage
 - Verificable mediante hash/IPFS
 
 ### Sistema de Pagos

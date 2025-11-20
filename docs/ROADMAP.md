@@ -1,8 +1,8 @@
-# Roadmap y Planes de Desarrollo - POAP Stellar
+# Roadmap y Planes de Desarrollo - SPOT (Stellar Proof of Togetherness)
 
 ## Resumen del Proyecto
 
-Sistema de POAPs (Proof of Attendance Protocol) para eventos en Stellar Blockchain, permitiendo crear NFTs de asistencia con múltiples métodos de distribución (QR, Link, Geolocalización, Códigos).
+Sistema de SPOTs (Stellar Proof of Togetherness) para eventos en Stellar Blockchain, permitiendo crear NFTs de asistencia con múltiples métodos de distribución (QR, Link, Geolocalización, Códigos).
 
 ## Estructura de Planes de Precios
 
@@ -181,7 +181,7 @@ Sistema de POAPs (Proof of Attendance Protocol) para eventos en Stellar Blockcha
 - [ ] Configuración de métodos de distribución
 - [ ] Integración con Factory Contract
 
-#### 4.3 Página de Claim de POAPs
+#### 4.3 Página de Claim de SPOTs
 - [ ] Interfaz para escanear QR
 - [ ] Interfaz para ingresar código
 - [ ] Interfaz para usar link
@@ -224,8 +224,8 @@ Sistema de POAPs (Proof of Attendance Protocol) para eventos en Stellar Blockcha
 
 ### FASE 6: UX y Galería (Día 5-6)
 
-#### 6.1 Galería de POAPs
-- [ ] Página para ver todos los POAPs del usuario
+#### 6.1 Galería de SPOTs
+- [ ] Página para ver todos los SPOTs del usuario
 - [ ] Filtros por evento, fecha, colección
 - [ ] Visualización de metadata completa
 - [ ] Compartir en redes sociales (opcional)
@@ -298,7 +298,7 @@ Sistema de POAPs (Proof of Attendance Protocol) para eventos en Stellar Blockcha
 
 ### Costos de Almacenamiento
 - Basar precios en costos reales de Stellar
-- Metadata on-chain: ~1-2KB por POAP
+- Metadata on-chain: ~1-2KB por SPOT
 - Optimizar storage usando estructuras eficientes
 - Considerar IPFS como alternativa para metadata grande
 
@@ -324,8 +324,8 @@ Sistema de POAPs (Proof of Attendance Protocol) para eventos en Stellar Blockcha
 
 ### MVP (Hackathon)
 - ✅ Crear eventos con planes
-- ✅ Mintear POAPs con QR y Link
-- ✅ Galería básica de POAPs
+- ✅ Mintear SPOTs con QR y Link
+- ✅ Galería básica de SPOTs
 - ✅ Validaciones principales funcionando
 
 ### Post-Hackathon

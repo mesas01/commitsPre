@@ -1,4 +1,4 @@
-# Arquitectura del Sistema POAP Stellar
+# Arquitectura del Sistema SPOT (Stellar Proof of Togetherness)
 
 ## Diagrama de Arquitectura General
 
@@ -65,7 +65,7 @@ sequenceDiagram
     B->>O: Solicitar pago (Stellar)
     O->>B: Pagar XLM
     B->>B: Descontar créditos del plan
-    B->>S: Subir imagen del POAP
+    B->>S: Subir imagen del SPOT
     S-->>B: URL de imagen
     B->>F: Crear nuevo evento
     F->>E: Instanciar Event Contract
@@ -76,7 +76,7 @@ sequenceDiagram
     UI-->>O: Confirmación
 ```
 
-## Flujo de Claim de POAP
+## Flujo de Claim de SPOT
 
 ```mermaid
 sequenceDiagram
@@ -103,7 +103,7 @@ sequenceDiagram
     W-->>UI: Transacción exitosa
     UI->>B: Notificar claim exitoso
     B->>B: Actualizar contadores
-    UI-->>U: POAP recibido
+    UI-->>U: SPOT recibido
 ```
 
 ## Estructura de Contratos
@@ -142,7 +142,7 @@ erDiagram
     USER ||--o{ EVENT : creates
     USER ||--o{ CREDIT : owns
     EVENT ||--o{ COLLECTION : has
-    COLLECTION ||--o{ POAP : contains
+    COLLECTION ||--o{ SPOT : contains
     EVENT ||--o{ DELEGATE : has
     EVENT ||--o{ QR_CODE : generates
     EVENT ||--o{ CLAIM_CODE : generates
@@ -185,7 +185,7 @@ erDiagram
         int minted_nfts
     }
     
-    POAP {
+    SPOT {
         string token_id
         string collection_id
         string owner_address
@@ -234,8 +234,8 @@ graph TB
         O2[Eliminar evento]
         O3[Modificar evento]
         O4[Agregar/remover roles]
-        O5[Mintear POAPs]
-        O6[Quemar POAPs]
+        O5[Mintear SPOTs]
+        O6[Quemar SPOTs]
         OWNER --> O1
         OWNER --> O2
         OWNER --> O3
@@ -247,8 +247,8 @@ graph TB
     subgraph "Permisos Admin"
         A1[Modificar evento]
         A2[Agregar/remover roles]
-        A3[Mintear POAPs]
-        A4[Quemar POAPs]
+        A3[Mintear SPOTs]
+        A4[Quemar SPOTs]
         ADMIN --> A1
         ADMIN --> A2
         ADMIN --> A3
@@ -256,13 +256,13 @@ graph TB
     end
 
     subgraph "Permisos Minter"
-        M1[Mintear POAPs]
+        M1[Mintear SPOTs]
         MINTER --> M1
     end
 
     subgraph "Permisos Viewer"
         V1[Ver eventos]
-        V2[Ver POAPs]
+        V2[Ver SPOTs]
         VIEWER --> V1
         VIEWER --> V2
     end
