@@ -1,6 +1,6 @@
-# POAP Global Contract
+# SPOT Global Contract
 
-Contrato Soroban que gestiona múltiples eventos POAP dentro de un único deployment.
+Contrato Soroban que gestiona múltiples eventos SPOT (Stellar Proof of Attendance Token) dentro de un único deployment.
 El flujo está optimizado para un **backend administrador** que valida pagos
 operativos fuera de cadena antes de habilitar a cada organizador.
 
@@ -39,7 +39,7 @@ operativos fuera de cadena antes de habilitar a cada organizador.
 | `revoke_creator_approval(operator, creator)` | Revoca rol y borra la aprobación (útil para reembolsos o fraudes). |
 | `get_creator_approval(creator)` | Devuelve metadata (`payment_reference`, `approved_at`, `approved_by`). |
 | `create_event(creator, ...)` | Sólo creators aprobados (o admins) pueden ejecutar y deben firmar. |
-| `claim(event_id, to)` | Los asistentes reclaman su POAP dentro de la ventana definida. |
+| `claim(event_id, to)` | Los asistentes reclaman su SPOT dentro de la ventana definida. |
 
 > Nota: `grant_creator_role`/`revoke_creator_role` fueron sustituidos por los nuevos
 > métodos que registran explícitamente el pago.
@@ -59,7 +59,7 @@ operativos fuera de cadena antes de habilitar a cada organizador.
 cargo test -p poap
 ```
 
-Las nuevas pruebas cubren:
+Las pruebas cubren:
 - Requisito de aprobación antes de crear un evento.
 - Revocación de aprobación impidiendo eventos futuros.
 

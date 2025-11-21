@@ -3,12 +3,12 @@ use soroban_sdk::{contracterror, symbol_short, Symbol};
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
-pub enum PoapError {
+pub enum SpotError {
     /// Unauthorized: Only authorized roles can perform this action
     Unauthorized = 1,
-    /// Already claimed: User already claimed POAP for this event
+    /// Already claimed: User already claimed SPOT for this event
     AlreadyClaimed = 2,
-    /// Limit exceeded: Maximum POAPs limit reached for this event
+    /// Limit exceeded: Maximum SPOT supply limit reached for this event
     LimitExceeded = 3,
     /// Claim period ended: Claim period has expired
     ClaimPeriodEnded = 4,
@@ -24,18 +24,18 @@ pub enum PoapError {
     CreatorNotApproved = 9,
 }
 
-impl PoapError {
+impl SpotError {
     pub fn to_symbol(&self) -> Symbol {
         match self {
-            PoapError::Unauthorized => symbol_short!("UNAUTH"),
-            PoapError::AlreadyClaimed => symbol_short!("CLAIMED"),
-            PoapError::LimitExceeded => symbol_short!("LIMIT_EX"),
-            PoapError::ClaimPeriodEnded => symbol_short!("CLAIM_END"),
-            PoapError::ClaimPeriodNotStarted => symbol_short!("NOT_START"),
-            PoapError::InvalidParameters => symbol_short!("INV_PARAM"),
-            PoapError::EventNotFound => symbol_short!("NO_EVENT"),
-            PoapError::EventAlreadyExists => symbol_short!("EVT_EXST"),
-            PoapError::CreatorNotApproved => symbol_short!("CRT_APPR"),
+            SpotError::Unauthorized => symbol_short!("UNAUTH"),
+            SpotError::AlreadyClaimed => symbol_short!("CLAIMED"),
+            SpotError::LimitExceeded => symbol_short!("LIMIT_EX"),
+            SpotError::ClaimPeriodEnded => symbol_short!("CLAIM_END"),
+            SpotError::ClaimPeriodNotStarted => symbol_short!("NOT_START"),
+            SpotError::InvalidParameters => symbol_short!("INV_PARAM"),
+            SpotError::EventNotFound => symbol_short!("NO_EVENT"),
+            SpotError::EventAlreadyExists => symbol_short!("EVT_EXST"),
+            SpotError::CreatorNotApproved => symbol_short!("CRT_APPR"),
         }
     }
 }

@@ -10,14 +10,15 @@ const {
   RPC_URL,
   NETWORK_PASSPHRASE,
   ADMIN_SECRET,
-  POAP_CONTRACT_ID,
+  SPOT_CONTRACT_ID,
   MOCK_MODE = "false",
 } = process.env;
 
 const isMock = MOCK_MODE.toLowerCase() === "true";
+const CONTRACT_ID = SPOT_CONTRACT_ID;
 
 if (!isMock) {
-  if (!RPC_URL || !NETWORK_PASSPHRASE || !ADMIN_SECRET || !POAP_CONTRACT_ID) {
+  if (!RPC_URL || !NETWORK_PASSPHRASE || !ADMIN_SECRET || !CONTRACT_ID) {
     throw new Error(
       "Missing env vars. Please copy backend/env.example → backend/.env and fill values."
     );
@@ -66,7 +67,7 @@ app.post("/creators/approve", async (req, res) => {
       rpcUrl: RPC_URL,
       networkPassphrase: NETWORK_PASSPHRASE,
       adminSecret: ADMIN_SECRET,
-      contractId: POAP_CONTRACT_ID,
+      contractId: CONTRACT_ID,
     });
     res.json({ txHash });
   } catch (error) {
@@ -91,7 +92,7 @@ app.post("/creators/revoke", async (req, res) => {
       rpcUrl: RPC_URL,
       networkPassphrase: NETWORK_PASSPHRASE,
       adminSecret: ADMIN_SECRET,
-      contractId: POAP_CONTRACT_ID,
+      contractId: CONTRACT_ID,
     });
     res.json({ txHash });
   } catch (error) {
@@ -101,6 +102,6 @@ app.post("/creators/revoke", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`POAP admin backend listening on http://localhost:${PORT}`);
+  console.log(`SPOT admin backend listening on http://localhost:${PORT}`);
 });
 

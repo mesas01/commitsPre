@@ -6,7 +6,7 @@ const UserInfo: React.FC = () => {
   const { address } = useWallet();
   
   // Placeholder fijo para el nombre de usuario
-  const username = "Usuario POAP";
+  const username = "Usuario SPOT";
 
   // Función para formatear la dirección (mostrar primeros y últimos caracteres)
   const formatAddress = (addr: string | undefined) => {

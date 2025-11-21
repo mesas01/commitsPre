@@ -1,7 +1,7 @@
 {
   "name": "poap-backend",
   "version": "0.1.0",
-  "description": "Backend admin for POAP contract approvals",
+  "description": "Backend admin for SPOT contract approvals",
   "type": "module",
   "scripts": {
     "dev": "node --watch ./src/server.js",

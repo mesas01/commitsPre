@@ -2,8 +2,8 @@ import React from "react";
 import { Layout, Text } from "@stellar/design-system";
 import { useWallet } from "../hooks/useWallet";
 
-// Mock POAP data for visual purposes
-const mockPOAPs = [
+// Mock SPOT data for visual purposes
+const mockSpots = [
   {
     id: 1,
     name: "Stellar Community Meetup 2024",
@@ -58,12 +58,12 @@ const Home: React.FC = () => {
           {/* Header Section */}
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-              Your POAP Collection
+              Your SPOT Collection
             </h1>
             <Text as="p" size="md" className="text-lg text-gray-600 max-w-2xl mx-auto">
               {address
-                ? "View and manage your Proof of Attendance Protocol badges"
-                : "Connect your wallet to view your POAP collection"}
+                ? "View and manage your Stellar Proof of Attendance badges"
+                : "Connect your wallet to view your SPOT collection"}
             </Text>
           </div>
 
@@ -74,7 +74,7 @@ const Home: React.FC = () => {
                 Connect Your Wallet
               </Text>
               <Text as="p" size="md" className="text-gray-600 max-w-md mx-auto">
-                Connect your Stellar wallet to view your POAP badges and claim new ones from events you've attended.
+                Connect your Stellar wallet to view your SPOT badges and claim new ones from events you've attended.
               </Text>
             </div>
           ) : (
@@ -82,8 +82,8 @@ const Home: React.FC = () => {
               {/* Stats Section */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                 <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-purple-100">
-                  <div className="text-3xl font-bold text-purple-600 mb-2">{mockPOAPs.length}</div>
-                  <div className="text-gray-600">Total POAPs</div>
+                  <div className="text-3xl font-bold text-purple-600 mb-2">{mockSpots.length}</div>
+                  <div className="text-gray-600">Total SPOT Badges</div>
                 </div>
                 <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-purple-100">
                   <div className="text-3xl font-bold text-blue-600 mb-2">2024</div>
@@ -95,31 +95,31 @@ const Home: React.FC = () => {
                 </div>
               </div>
 
-              {/* POAP Grid */}
+              {/* SPOT Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {mockPOAPs.map((poap) => (
+                {mockSpots.map((spotBadge) => (
                   <div
-                    key={poap.id}
+                    key={spotBadge.id}
                     className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border-2 border-purple-100 hover:border-purple-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                   >
-                    {/* POAP Badge Circle */}
-                    <div className={`bg-gradient-to-br ${poap.color} p-8 flex items-center justify-center`}>
+                    {/* SPOT Badge Circle */}
+                    <div className={`bg-gradient-to-br ${spotBadge.color} p-8 flex items-center justify-center`}>
                       <div className="w-32 h-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-4 border-white/30 shadow-inner">
-                        <span className="text-6xl">{poap.image}</span>
+                        <span className="text-6xl">{spotBadge.image}</span>
                       </div>
                     </div>
 
-                    {/* POAP Info */}
+                    {/* SPOT Info */}
                     <div className="p-6">
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">{poap.name}</h3>
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">{spotBadge.name}</h3>
                       <div className="flex items-center text-gray-600 mb-4">
-                        <span className="text-sm">📅 {new Date(poap.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                        <span className="text-sm">📅 {new Date(spotBadge.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
                           Verified
                         </span>
-                        <span className="text-xs text-gray-500">#{poap.id.toString().padStart(4, '0')}</span>
+                        <span className="text-xs text-gray-500">#{spotBadge.id.toString().padStart(4, '0')}</span>
                       </div>
                     </div>
                   </div>
@@ -129,7 +129,7 @@ const Home: React.FC = () => {
               {/* Empty State Message */}
               <div className="mt-12 text-center">
                 <Text as="p" size="md" className="text-gray-500">
-                  Attend events and claim more POAPs to grow your collection!
+                  Attend events and claim more SPOT badges to grow your collection!
                 </Text>
               </div>
             </>

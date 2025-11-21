@@ -1,6 +1,6 @@
-# POAP Admin Backend
+# SPOT Admin Backend
 
-Servicio Express que actúa como **operador administrador** del contrato `poap`.
+Servicio Express que actúa como **operador administrador** del contrato `spot`.
 Su objetivo es exponer endpoints REST para aprobar o revocar organizadores una vez
 que hayan pagado off-chain.
 
@@ -26,7 +26,7 @@ Variables necesarias (`.env`):
 | `RPC_URL` | Endpoint Soroban RPC (ej. `https://soroban-testnet.stellar.org`) |
 | `NETWORK_PASSPHRASE` | Frase del network correspondiente |
 | `ADMIN_SECRET` | Clave secreta **válida** (comienza con `S...`) que posee rol admin del contrato |
-| `POAP_CONTRACT_ID` | ID del contrato desplegado |
+| `SPOT_CONTRACT_ID` | ID del contrato desplegado |
 | `MOCK_MODE` | Si es `true`, no se hace ninguna llamada a Soroban y se devuelven hashes simulados |
 
 > Para hacer pruebas sin contrato desplegado, establece `MOCK_MODE=true` en tu `.env`.

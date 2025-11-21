@@ -1,6 +1,6 @@
 [package]
 name = "poap"
-description = "POAP (Proof of Attendance Protocol) contract that manages multiple events in a single contract"
+description = "SPOT (Stellar Proof of Attendance Token) contract that manages multiple events in a single contract"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true

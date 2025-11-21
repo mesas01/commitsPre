@@ -1,13 +1,13 @@
 #![cfg(test)]
 
 use super::*;
-use crate::contract::PoapClient;
+use crate::contract::SpotClient;
 use soroban_sdk::{testutils::Address as _, Address, Env, String};
 
-fn create_client<'a>(e: &'a Env, admin: &Address) -> PoapClient<'a> {
+fn create_client<'a>(e: &'a Env, admin: &Address) -> SpotClient<'a> {
     e.mock_all_auths();
-    let address = e.register(Poap, (admin,));
-    PoapClient::new(e, &address)
+    let address = e.register(Spot, (admin,));
+    SpotClient::new(e, &address)
 }
 
 #[test]
@@ -144,7 +144,7 @@ fn test_claim() {
     assert_eq!(minted, 1);
 
     let result = client.try_claim(&event_id, &recipient);
-    assert_eq!(result.unwrap_err(), Ok(PoapError::AlreadyClaimed));
+    assert_eq!(result.unwrap_err(), Ok(SpotError::AlreadyClaimed));
 }
 
 #[test]
@@ -234,7 +234,7 @@ fn test_limit_exceeded() {
 
     let recipient3 = Address::generate(&e);
     let result = client.try_claim(&event_id, &recipient3);
-    assert_eq!(result.unwrap_err(), Ok(PoapError::LimitExceeded));
+    assert_eq!(result.unwrap_err(), Ok(SpotError::LimitExceeded));
 }
 
 #[test]
@@ -256,7 +256,7 @@ fn test_invalid_max_poaps() {
         &String::from_str(&e, "https://example.com/image.png"),
     );
 
-    assert_eq!(result.unwrap_err(), Ok(PoapError::InvalidParameters));
+    assert_eq!(result.unwrap_err(), Ok(SpotError::InvalidParameters));
 }
 
 #[test]
@@ -278,7 +278,7 @@ fn test_invalid_claim_period() {
         &String::from_str(&e, "https://example.com/image.png"),
     );
 
-    assert_eq!(result.unwrap_err(), Ok(PoapError::InvalidParameters));
+    assert_eq!(result.unwrap_err(), Ok(SpotError::InvalidParameters));
 }
 
 #[test]
@@ -289,10 +289,10 @@ fn test_event_not_found() {
     let client = create_client(&e, &admin);
 
     let result = client.try_claim(&999, &recipient);
-    assert_eq!(result.unwrap_err(), Ok(PoapError::EventNotFound));
+    assert_eq!(result.unwrap_err(), Ok(SpotError::EventNotFound));
 
     let result = client.try_get_event(&999);
-    assert_eq!(result.unwrap_err(), Ok(PoapError::EventNotFound));
+    assert_eq!(result.unwrap_err(), Ok(SpotError::EventNotFound));
 }
 
 #[test]
@@ -353,7 +353,7 @@ fn test_creator_requires_backend_approval() {
         &String::from_str(&e, "https://example.com/image.png"),
     );
 
-    assert_eq!(event_result.unwrap_err(), Ok(PoapError::CreatorNotApproved));
+    assert_eq!(event_result.unwrap_err(), Ok(SpotError::CreatorNotApproved));
 
     client.approve_creator(
         &admin,
@@ -422,5 +422,5 @@ fn test_revoke_creator_approval_blocks_future_events() {
         &String::from_str(&e, "https://example.com/image.png"),
     );
 
-    assert_eq!(result.unwrap_err(), Ok(PoapError::CreatorNotApproved));
+    assert_eq!(result.unwrap_err(), Ok(SpotError::CreatorNotApproved));
 }

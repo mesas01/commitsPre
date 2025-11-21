@@ -1,6 +1,6 @@
-//! POAP Contract
+//! SPOT Contract
 //!
-//! This contract manages POAP (Proof of Attendance Protocol) NFTs for multiple events.
+//! This contract manages SPOT (Stellar Proof of Attendance Token) NFTs for multiple events.
 //! It handles event creation, minting, burning, role-based access control, and claim period validation.
 //! All events are managed in a single contract instance.
 
@@ -13,15 +13,15 @@ use stellar_tokens::non_fungible::{
     Base, NonFungibleToken,
 };
 
-use crate::error::PoapError;
+use crate::error::SpotError;
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DataKey {
     EventCounter,                  // Counter for event IDs
     EventInfo(u32),                // Event information (EventData)
-    EventMintedCount(u32),         // Number of POAPs minted for an event
-    HasClaimed(u32, Address),      // Track if an address has claimed POAP for an event
+    EventMintedCount(u32),         // Number of SPOT badges minted for an event
+    HasClaimed(u32, Address),      // Track if an address has claimed a SPOT badge for an event
     EventTokenId(u32, u32),        // Map event_id + token_index to token_id
     UserEventTokenId(u32, Address), // Map event_id + address to token_id (for efficient lookup)
     CreatorApproval(Address),      // Tracks off-chain payment approval for creators
@@ -52,11 +52,11 @@ pub struct CreatorApproval {
 }
 
 #[contract]
-pub struct Poap;
+pub struct Spot;
 
 #[contractimpl]
-impl Poap {
-    /// Constructor: Initialize the POAP contract
+impl Spot {
+/// Constructor: Initialize the SPOT contract
     /// 
     /// # Arguments
     /// * `admin` - Address of the contract admin
@@ -64,9 +64,9 @@ impl Poap {
         // Set NFT metadata for the contract first
         Base::set_metadata(
             e,
-            String::from_str(e, "https://poap.example.com/metadata"),
-            String::from_str(e, "POAP"),
-            String::from_str(e, "POAP"),
+            String::from_str(e, "https://spot.example.com/metadata"),
+            String::from_str(e, "SPOT"),
+            String::from_str(e, "SPOT"),
         );
 
         // Initialize access control
@@ -77,11 +77,11 @@ impl Poap {
     }
 
     /// Get the admin address
-    pub fn admin(e: &Env) -> Result<Address, PoapError> {
-        access_control::get_admin(e).ok_or(PoapError::Unauthorized)
+    pub fn admin(e: &Env) -> Result<Address, SpotError> {
+        access_control::get_admin(e).ok_or(SpotError::Unauthorized)
     }
 
-    /// Create a new POAP event
+    /// Create a new SPOT event
     /// 
     /// # Arguments
     /// * `creator` - Address creating the event (must be authorized)
@@ -89,7 +89,7 @@ impl Poap {
     /// * `event_date` - Date of the event (Unix timestamp)
     /// * `location` - Location of the event
     /// * `description` - Event description
-    /// * `max_poaps` - Maximum number of POAPs that can be minted
+    /// * `max_poaps` - Maximum number of SPOT badges that can be minted
     /// * `claim_start` - Claim period start timestamp
     /// * `claim_end` - Claim period end timestamp
     /// * `metadata_uri` - URI pointing to event metadata JSON
@@ -109,12 +109,12 @@ impl Poap {
         claim_end: u64,
         metadata_uri: String,
         image_url: String,
-    ) -> Result<u32, PoapError> {
+    ) -> Result<u32, SpotError> {
         creator.require_auth();
 
         let is_admin = Self::is_admin_address(e, &creator)?;
         if !is_admin && !Self::has_creator_approval(e, &creator) {
-            return Err(PoapError::CreatorNotApproved);
+            return Err(SpotError::CreatorNotApproved);
         }
 
         // Verify creator is authorized (admin or has creator role)
@@ -122,10 +122,10 @@ impl Poap {
 
         // Validate parameters
         if max_poaps == 0 {
-            return Err(PoapError::InvalidParameters);
+            return Err(SpotError::InvalidParameters);
         }
         if claim_end < claim_start {
-            return Err(PoapError::InvalidParameters);
+            return Err(SpotError::InvalidParameters);
         }
 
         // Get and increment event counter
@@ -135,7 +135,7 @@ impl Poap {
 
         // Check if event already exists (shouldn't happen, but safety check)
         if e.storage().instance().has(&DataKey::EventInfo(event_id)) {
-            return Err(PoapError::EventAlreadyExists);
+            return Err(SpotError::EventAlreadyExists);
         }
 
         // Create event data
@@ -168,7 +168,7 @@ impl Poap {
         operator: Address,
         creator: Address,
         payment_reference: String,
-    ) -> Result<(), PoapError> {
+    ) -> Result<(), SpotError> {
         Self::require_admin(e, &operator)?;
         access_control::grant_role(e, &operator, &creator, &symbol_short!("creator"));
 
@@ -190,7 +190,7 @@ impl Poap {
         e: &Env,
         operator: Address,
         creator: Address,
-    ) -> Result<(), PoapError> {
+    ) -> Result<(), SpotError> {
         Self::require_admin(e, &operator)?;
         access_control::revoke_role(e, &operator, &creator, &symbol_short!("creator"));
         e.storage().instance().remove(&DataKey::CreatorApproval(creator));
@@ -202,31 +202,31 @@ impl Poap {
         e.storage().instance().get(&DataKey::CreatorApproval(creator))
     }
 
-    /// Claim a POAP for a specific event
+    /// Claim a SPOT badge for a specific event
     /// 
     /// # Arguments
     /// * `event_id` - ID of the event
-    /// * `to` - Address that will receive the POAP NFT
+    /// * `to` - Address that will receive the SPOT NFT
     /// 
     /// # Returns
-    /// The token ID of the minted POAP
-    pub fn claim(e: &Env, event_id: u32, to: Address) -> Result<u32, PoapError> {
+    /// The token ID of the minted SPOT badge
+    pub fn claim(e: &Env, event_id: u32, to: Address) -> Result<u32, SpotError> {
         // Get event information
         let event_data: EventData = e.storage().instance().get(&DataKey::EventInfo(event_id))
-            .ok_or(PoapError::EventNotFound)?;
+            .ok_or(SpotError::EventNotFound)?;
 
         // Check if claim period is active
         let current_time = e.ledger().timestamp();
         if current_time < event_data.claim_start {
-            return Err(PoapError::ClaimPeriodNotStarted);
+            return Err(SpotError::ClaimPeriodNotStarted);
         }
         if current_time > event_data.claim_end {
-            return Err(PoapError::ClaimPeriodEnded);
+            return Err(SpotError::ClaimPeriodEnded);
         }
 
         // Check if address has already claimed (prevent duplicates)
         if e.storage().instance().has(&DataKey::HasClaimed(event_id, to.clone())) {
-            return Err(PoapError::AlreadyClaimed);
+            return Err(SpotError::AlreadyClaimed);
         }
 
         // Check if limit is exceeded
@@ -234,7 +234,7 @@ impl Poap {
             .unwrap_or(0u32);
 
         if minted >= event_data.max_poaps {
-            return Err(PoapError::LimitExceeded);
+            return Err(SpotError::LimitExceeded);
         }
 
         // Mint the NFT
@@ -249,22 +249,22 @@ impl Poap {
         Ok(token_id)
     }
 
-    /// Check if an address has claimed a POAP for a specific event
+    /// Check if an address has claimed a SPOT badge for a specific event
     pub fn has_claimed(e: &Env, event_id: u32, address: Address) -> bool {
         e.storage().instance().has(&DataKey::HasClaimed(event_id, address))
     }
 
     /// Get event information
-    pub fn get_event(e: &Env, event_id: u32) -> Result<EventData, PoapError> {
+    pub fn get_event(e: &Env, event_id: u32) -> Result<EventData, SpotError> {
         e.storage().instance().get(&DataKey::EventInfo(event_id))
-            .ok_or(PoapError::EventNotFound)
+            .ok_or(SpotError::EventNotFound)
     }
 
-    /// Get the number of POAPs minted for an event
-    pub fn minted_count(e: &Env, event_id: u32) -> Result<u32, PoapError> {
+    /// Get the number of SPOT badges minted for an event
+    pub fn minted_count(e: &Env, event_id: u32) -> Result<u32, SpotError> {
         // Verify event exists
         let _event_data: EventData = e.storage().instance().get(&DataKey::EventInfo(event_id))
-            .ok_or(PoapError::EventNotFound)?;
+            .ok_or(SpotError::EventNotFound)?;
         
         Ok(e.storage().instance().get(&DataKey::EventMintedCount(event_id))
             .unwrap_or(0u32))
@@ -298,13 +298,13 @@ impl Poap {
     /// 
     /// # Returns
     /// The token ID if it exists
-    pub fn get_token_id_for_event(e: &Env, event_id: u32, token_index: u32) -> Result<u32, PoapError> {
+    pub fn get_token_id_for_event(e: &Env, event_id: u32, token_index: u32) -> Result<u32, SpotError> {
         // Verify event exists
         let _event_data: EventData = e.storage().instance().get(&DataKey::EventInfo(event_id))
-            .ok_or(PoapError::EventNotFound)?;
+            .ok_or(SpotError::EventNotFound)?;
         
         e.storage().instance().get(&DataKey::EventTokenId(event_id, token_index))
-            .ok_or(PoapError::EventNotFound)
+            .ok_or(SpotError::EventNotFound)
     }
 
     /// Get all token IDs minted for a specific event
@@ -314,10 +314,10 @@ impl Poap {
     /// 
     /// # Returns
     /// A vector of all token IDs minted for the event
-    pub fn get_event_poaps(e: &Env, event_id: u32) -> Result<Vec<u32>, PoapError> {
+    pub fn get_event_poaps(e: &Env, event_id: u32) -> Result<Vec<u32>, SpotError> {
         // Verify event exists
         let _event_data: EventData = e.storage().instance().get(&DataKey::EventInfo(event_id))
-            .ok_or(PoapError::EventNotFound)?;
+            .ok_or(SpotError::EventNotFound)?;
         
         let minted: u32 = e.storage().instance().get(&DataKey::EventMintedCount(event_id))
             .unwrap_or(0u32);
@@ -332,31 +332,31 @@ impl Poap {
         Ok(token_ids)
     }
 
-    /// Get the token ID of a POAP claimed by a specific address for an event
+    /// Get the token ID of a SPOT badge claimed by a specific address for an event
     /// 
     /// # Arguments
     /// * `event_id` - ID of the event
-    /// * `address` - Address that claimed the POAP
+    /// * `address` - Address that claimed the SPOT badge
     /// 
     /// # Returns
-    /// The token ID if the address has claimed a POAP for this event
-    pub fn get_user_poap_for_event(e: &Env, event_id: u32, address: Address) -> Result<u32, PoapError> {
+    /// The token ID if the address has claimed a SPOT badge for this event
+    pub fn get_user_poap_for_event(e: &Env, event_id: u32, address: Address) -> Result<u32, SpotError> {
         // Verify event exists
         let _event_data: EventData = e.storage().instance().get(&DataKey::EventInfo(event_id))
-            .ok_or(PoapError::EventNotFound)?;
+            .ok_or(SpotError::EventNotFound)?;
         
         // Check if address has claimed
         if !e.storage().instance().has(&DataKey::HasClaimed(event_id, address.clone())) {
-            return Err(PoapError::EventNotFound); // Address hasn't claimed
+            return Err(SpotError::EventNotFound); // Address hasn't claimed
         }
         
         // Get token ID directly from the mapping
         e.storage().instance().get(&DataKey::UserEventTokenId(event_id, address))
-            .ok_or(PoapError::EventNotFound)
+            .ok_or(SpotError::EventNotFound)
     }
 
     /// Grant admin role to an address
-    pub fn grant_admin_role(e: &Env, admin: Address, operator: Address) -> Result<(), PoapError> {
+    pub fn grant_admin_role(e: &Env, admin: Address, operator: Address) -> Result<(), SpotError> {
         let contract_admin = Self::admin(e)?;
         contract_admin.require_auth();
         access_control::grant_role(e, &operator, &admin, &symbol_short!("admin"));
@@ -374,9 +374,9 @@ impl Poap {
         description: Option<String>,
         metadata_uri: Option<String>,
         image_url: Option<String>,
-    ) -> Result<(), PoapError> {
+    ) -> Result<(), SpotError> {
         let mut event_data: EventData = e.storage().instance().get(&DataKey::EventInfo(event_id))
-            .ok_or(PoapError::EventNotFound)?;
+            .ok_or(SpotError::EventNotFound)?;
 
         // Verify operator is event creator or admin
         if event_data.creator != operator {
@@ -410,15 +410,15 @@ impl Poap {
     }
 
     // Helper functions for role checking
-    fn require_admin(e: &Env, address: &Address) -> Result<(), PoapError> {
+    fn require_admin(e: &Env, address: &Address) -> Result<(), SpotError> {
         if Self::is_admin_address(e, address)? {
             return Ok(());
         }
         
-        Err(PoapError::Unauthorized)
+        Err(SpotError::Unauthorized)
     }
 
-    fn require_admin_or_creator(e: &Env, address: &Address) -> Result<(), PoapError> {
+    fn require_admin_or_creator(e: &Env, address: &Address) -> Result<(), SpotError> {
         if Self::is_admin_address(e, address)? {
             return Ok(());
         }
@@ -431,10 +431,10 @@ impl Poap {
             return Ok(());
         }
         
-        Err(PoapError::Unauthorized)
+        Err(SpotError::Unauthorized)
     }
 
-    fn is_admin_address(e: &Env, address: &Address) -> Result<bool, PoapError> {
+    fn is_admin_address(e: &Env, address: &Address) -> Result<bool, SpotError> {
         let admin = Self::admin(e)?;
         if *address == admin {
             return Ok(true);
@@ -452,19 +452,19 @@ impl Poap {
 
 #[default_impl]
 #[contractimpl]
-impl NonFungibleToken for Poap {
+impl NonFungibleToken for Spot {
     type ContractType = Enumerable;
 }
 
 #[default_impl]
 #[contractimpl]
-impl NonFungibleEnumerable for Poap {}
+impl NonFungibleEnumerable for Spot {}
 
 #[default_impl]
 #[contractimpl]
-impl NonFungibleBurnable for Poap {}
+impl NonFungibleBurnable for Spot {}
 
 #[default_impl]
 #[contractimpl]
-impl AccessControl for Poap {}
+impl AccessControl for Spot {}
 
