@@ -42,6 +42,7 @@ const FundAccountButton: React.FC = () => {
     <div
       onMouseEnter={() => setIsTooltipVisible(true)}
       onMouseLeave={() => setIsTooltipVisible(false)}
+      className="whitespace-nowrap"
     >
       <Tooltip
         isVisible={isTooltipVisible}
@@ -52,10 +53,18 @@ const FundAccountButton: React.FC = () => {
           <Button
             disabled={isPending}
             onClick={handleFundAccount}
-            variant="primary"
+            variant="secondary"
             size="md"
+            className="font-semibold px-4 py-2 rounded-xl bg-white/90 backdrop-blur-sm border border-purple-200 shadow-lg hover:shadow-xl hover:border-purple-300 transition-all duration-300 hover:scale-105 text-purple-700 hover:text-purple-800 hover:bg-white"
+            style={{
+              minWidth: 'fit-content',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            Fund Account
+            <span className="hidden sm:inline">Fund Account</span>
+            <span className="sm:hidden">Fund</span>
           </Button>
         }
       >

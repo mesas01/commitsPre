@@ -6,17 +6,13 @@ import NetworkPill from "./NetworkPill";
 
 const ConnectAccount: React.FC = () => {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: "10px",
-        verticalAlign: "middle",
-      }}
-    >
+    <div className="flex flex-row items-center gap-2 sm:gap-3 flex-wrap md:flex-nowrap">
       <WalletButton />
-      {stellarNetwork !== "PUBLIC" && <FundAccountButton />}
+      {stellarNetwork !== "PUBLIC" && (
+        <div className="hidden min-[475px]:block md:block">
+          <FundAccountButton />
+        </div>
+      )}
       <NetworkPill />
     </div>
   );

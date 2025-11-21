@@ -34,22 +34,16 @@ const NetworkPill: React.FC = () => {
 
   return (
     <div
+      className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-2xl font-bold text-xs sm:text-xs cursor-default"
       style={{
         backgroundColor: bgColor,
         color: textColor,
-        padding: "4px 10px",
-        borderRadius: "16px",
-        fontSize: "12px",
-        fontWeight: "bold",
-        display: "flex",
-        alignItems: "center",
-        gap: "4px",
         cursor: isNetworkMismatch ? "help" : "default",
       }}
       title={title}
     >
-      <Icon.Circle color={color} />
-      {appNetwork}
+      <Icon.Circle color={color} size="sm" />
+      <span className="whitespace-nowrap">{appNetwork}</span>
     </div>
   );
 };

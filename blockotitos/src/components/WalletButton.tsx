@@ -18,16 +18,15 @@ export const WalletButton = () => {
 
   return (
     <div
+      className="flex flex-row items-center gap-2 sm:gap-3 opacity-100"
       style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: "5px",
         opacity: isPending ? 0.6 : 1,
       }}
     >
-      <Text as="div" size="sm">
-        Wallet Balance: {balances?.xlm?.balance ?? "-"} XLM
+      {/* Balance - hidden on mobile, shown on tablet+ */}
+      <Text as="div" size="sm" className="hidden sm:block whitespace-nowrap">
+        <span className="hidden md:inline">Wallet Balance: </span>
+        {balances?.xlm?.balance ?? "-"} XLM
       </Text>
 
       <div id="modalContainer">
@@ -66,12 +65,26 @@ export const WalletButton = () => {
         </Modal>
       </div>
 
-      <Profile
-        publicAddress={address}
-        size="md"
-        isShort
+      {/* Profile - only shown on mobile, hidden on desktop since UserInfo shows the address */}
+      <div className="md:hidden">
+        <Profile
+          publicAddress={address}
+          size="md"
+          isShort
+          onClick={() => setShowDisconnectModal(true)}
+        />
+      </div>
+      
+      {/* Disconnect button for desktop - hidden on mobile */}
+      <Button
+        variant="tertiary"
+        size="sm"
         onClick={() => setShowDisconnectModal(true)}
-      />
+        className="hidden md:flex"
+        title="Disconnect wallet"
+      >
+        Disconnect
+      </Button>
     </div>
   );
 };
