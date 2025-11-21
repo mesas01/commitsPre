@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { Button, Icon } from "@stellar/design-system";
 import { NavLink } from "react-router-dom";
 import ConnectAccount from "./ConnectAccount";
-import { stellarNetwork } from "../contracts/util";
-import FundAccountButton from "./FundAccountButton";
 import UserInfo from "./UserInfo";
 
 const MobileMenu: React.FC = () => {
@@ -93,9 +91,9 @@ const MobileMenu: React.FC = () => {
 
           {/* Menu Content */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Debugger Link */}
+            {/* Mint Link */}
             <NavLink
-              to="/debug"
+              to="/mint"
               className="no-underline"
               onClick={closeMenu}
             >
@@ -103,29 +101,85 @@ const MobileMenu: React.FC = () => {
                 <div
                   className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-200 ${
                     isActive
-                      ? "bg-purple-100 text-purple-700"
-                      : "bg-gray-50 hover:bg-purple-50 text-gray-700"
+                      ? "bg-spot-yellow text-black"
+                      : "bg-gray-50 hover:bg-spot-yellow/20 text-gray-700"
                   }`}
                 >
-                  <Icon.Code02 size="md" />
-                  <span className="font-medium">Debugger</span>
+                  ⚡
+                  <span className="font-medium">Reclamar SPOT</span>
                 </div>
               )}
             </NavLink>
 
+            {/* Create Event Link */}
+            <NavLink
+              to="/create-event"
+              className="no-underline"
+              onClick={closeMenu}
+            >
+              {({ isActive }) => (
+                <div
+                  className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? "bg-spot-purple/30 text-black"
+                      : "bg-gray-50 hover:bg-spot-purple/10 text-gray-700"
+                  }`}
+                >
+                  ➕
+                  <span className="font-medium">Crear Evento</span>
+                </div>
+              )}
+            </NavLink>
+
+            {/* Profile Link */}
+            <NavLink
+              to="/profile"
+              className="no-underline"
+              onClick={closeMenu}
+            >
+              {({ isActive }) => (
+                <div
+                  className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? "bg-spot-purple/30 text-black"
+                      : "bg-gray-50 hover:bg-spot-purple/10 text-gray-700"
+                  }`}
+                >
+                  👤
+                  <span className="font-medium">Mi Perfil</span>
+                </div>
+              )}
+            </NavLink>
+
+            {/* Debugger Link - Solo en desarrollo */}
+            {process.env.NODE_ENV === 'development' && (
+              <NavLink
+                to="/debug"
+                className="no-underline"
+                onClick={closeMenu}
+              >
+                {({ isActive }) => (
+                  <div
+                    className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-200 ${
+                      isActive
+                        ? "bg-spot-purple/30 text-black"
+                        : "bg-gray-50 hover:bg-spot-purple/10 text-gray-700"
+                    }`}
+                  >
+                    <Icon.Code02 size="md" />
+                    <span className="font-medium">Debugger</span>
+                  </div>
+                )}
+              </NavLink>
+            )}
+
             {/* Wallet Section */}
-            <div className="space-y-4 pt-4 border-t border-purple-100">
+            <div className="space-y-4 pt-4 border-t border-spot-purple/20">
               <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
                 Wallet
               </h3>
               <div className="space-y-4">
                 <ConnectAccount />
-                {/* Fund Account Button - always visible in mobile menu */}
-                {stellarNetwork !== "PUBLIC" && (
-                  <div className="w-full">
-                    <FundAccountButton />
-                  </div>
-                )}
               </div>
             </div>
           </div>

@@ -1,139 +1,249 @@
 import React from "react";
-import { Layout, Text } from "@stellar/design-system";
+import { Layout, Text, Button } from "@stellar/design-system";
 import { useWallet } from "../hooks/useWallet";
+import { useNavigate } from "react-router-dom";
+import MonthSection from "../components/spot/MonthSection";
+import { SpotData } from "../components/spot/SpotCard";
+import { groupSpotsByMonth, getTotalSpots } from "../utils/spotGrouping";
 
-// Mock SPOT data for visual purposes
-const mockSpots = [
+// Mock SPOT data for visual purposes - TODO: Obtener del contrato
+const mockSpots: SpotData[] = [
   {
     id: 1,
-    name: "Stellar Community Meetup 2024",
-    date: "2024-01-15",
+    name: "Stellar Community Meetup",
+    date: "2025-11-15",
     image: "🌟",
-    color: "from-purple-400 to-pink-400",
+    color: "from-stellar-lilac/30 to-stellar-lilac/50",
   },
   {
     id: 2,
     name: "Blockchain Developer Workshop",
-    date: "2024-02-20",
+    date: "2025-11-20",
     image: "💻",
-    color: "from-blue-400 to-cyan-400",
+    color: "from-stellar-lilac/30 to-stellar-lilac/50",
   },
   {
     id: 3,
     name: "DeFi Summit",
-    date: "2024-03-10",
+    date: "2025-10-10",
     image: "🚀",
-    color: "from-green-400 to-emerald-400",
+    color: "from-stellar-lilac/30 to-stellar-lilac/50",
   },
   {
     id: 4,
     name: "NFT Art Gallery Opening",
-    date: "2024-04-05",
+    date: "2025-10-05",
     image: "🎨",
-    color: "from-orange-400 to-red-400",
-  },
-  {
-    id: 5,
-    name: "Web3 Hackathon",
-    date: "2024-05-12",
-    image: "⚡",
-    color: "from-indigo-400 to-purple-400",
-  },
-  {
-    id: 6,
-    name: "Crypto Conference",
-    date: "2024-06-18",
-    image: "🎯",
-    color: "from-yellow-400 to-orange-400",
+    color: "from-stellar-lilac/30 to-stellar-lilac/50",
   },
 ];
 
 const Home: React.FC = () => {
   const { address } = useWallet();
+  const navigate = useNavigate();
+  const isConnected = !!address;
+  
+  // Agrupar SPOTs por mes/año
+  const groupedSpots = groupSpotsByMonth(mockSpots);
+  const totalSpots = getTotalSpots(mockSpots);
+
+  // TODO: Obtener SPOTs reales del contrato cuando el wallet esté conectado
+  // const { data: spots } = useSpotCollection(address);
 
   return (
-    <Layout.Content className="min-h-screen">
-      <Layout.Inset className="py-12">
+    <Layout.Content>
+      <Layout.Inset>
+        <div className="min-h-screen bg-stellar-white py-6 md:py-12">
         <div className="max-w-7xl mx-auto">
-          {/* Header Section */}
-          <div className="text-center mb-12">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-              Your SPOT Collection
-            </h1>
-            <Text as="p" size="md" className="text-lg text-gray-600 max-w-2xl mx-auto">
-              {address
-                ? "View and manage your Stellar Proof of Attendance badges"
-                : "Connect your wallet to view your SPOT collection"}
+          {/* Hero Section - Landing Page */}
+          <div className="text-center mb-12 md:mb-16">
+            <div className="text-6xl md:text-7xl mb-6">🎯</div>
+            {/* TL;DR - Stellar Brand Manual: Start with conclusion */}
+            <Text as="div" size="sm" className="text-stellar-teal mb-4 font-medium uppercase tracking-wider">
+              TL;DR
             </Text>
-          </div>
-
-          {!address ? (
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-12 text-center border border-purple-200">
-              <div className="text-6xl mb-6">🔐</div>
-              <Text as="h2" size="lg" className="text-2xl font-semibold text-gray-800 mb-4">
-                Connect Your Wallet
-              </Text>
-              <Text as="p" size="md" className="text-gray-600 max-w-md mx-auto">
-                Connect your Stellar wallet to view your SPOT badges and claim new ones from events you've attended.
+            <Text as="h1" size="xl" className="text-4xl md:text-5xl lg:text-6xl font-headline text-stellar-black mb-4 tracking-tight uppercase">
+              SPOT
+            </Text>
+            <Text as="p" size="lg" className="text-xl md:text-2xl text-stellar-black mb-2 font-subhead italic">
+              Stellar Proof of Togetherness
+            </Text>
+            <Text as="p" size="md" className="text-base md:text-lg text-stellar-black max-w-3xl mx-auto mb-4 font-body">
+              Crea y reclama NFTs de asistencia a eventos en la blockchain de Stellar. 
+              Prueba de que estuviste ahí, para siempre en la blockchain.
+            </Text>
+            {/* TL;DR Summary */}
+            <div className="bg-stellar-warm-grey/30 rounded-lg p-4 max-w-2xl mx-auto mb-8">
+              <Text as="p" size="sm" className="text-stellar-black font-body">
+                <span className="font-semibold">TL;DR:</span> Conecta tu wallet, crea eventos o reclama SPOTs de eventos a los que asistas. 
+                Todo está en la blockchain de Stellar, inmutable y verificable.
               </Text>
             </div>
-          ) : (
+
+            {/* CTA Buttons - Stellar Gold for primary action */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button
+                onClick={() => navigate("/mint")}
+                variant="primary"
+                size="lg"
+                className="bg-stellar-gold text-stellar-black hover:bg-yellow-400 font-semibold px-8 py-3 border-2 border-stellar-black/10"
+              >
+                ⚡ Reclamar SPOT
+              </Button>
+              <Button
+                onClick={() => navigate("/create-event")}
+                variant="secondary"
+                size="lg"
+                className="bg-stellar-lilac text-stellar-black hover:bg-lilac-600 font-semibold px-8 py-3"
+              >
+                ➕ Crear Evento
+              </Button>
+              {isConnected && (
+                <Button
+                  onClick={() => navigate("/profile")}
+                  variant="tertiary"
+                  size="lg"
+                  className="border-2 border-stellar-teal/30 text-stellar-teal hover:bg-stellar-teal/10 font-semibold px-8 py-3"
+                >
+                  👤 Mis SPOTs
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Features Section - Stellar Brand Colors */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 md:mb-16">
+            <div className="bg-stellar-white rounded-xl p-6 shadow-md border-2 border-stellar-lilac/20 text-center">
+              <div className="text-4xl mb-4">📱</div>
+              <Text as="h3" size="md" className="font-headline text-stellar-black mb-2 uppercase">
+                Múltiples Métodos
+              </Text>
+              <Text as="p" size="sm" className="text-stellar-black font-body">
+                Reclama SPOTs con QR, Link, Código, Geolocalización o NFC
+              </Text>
+            </div>
+            <div className="bg-stellar-white rounded-xl p-6 shadow-md border-2 border-stellar-gold/30 text-center">
+              <div className="text-4xl mb-4">🔒</div>
+              <Text as="h3" size="md" className="font-headline text-stellar-black mb-2 uppercase">
+                En la Blockchain
+              </Text>
+              <Text as="p" size="sm" className="text-stellar-black font-body">
+                Tus SPOTs están guardados permanentemente en la red Stellar
+              </Text>
+            </div>
+            <div className="bg-stellar-white rounded-xl p-6 shadow-md border-2 border-stellar-teal/20 text-center">
+              <div className="text-4xl mb-4">🎨</div>
+              <Text as="h3" size="md" className="font-headline text-stellar-black mb-2 uppercase">
+                Personalizables
+              </Text>
+              <Text as="p" size="sm" className="text-stellar-black font-body">
+                Crea eventos únicos con imágenes y metadata personalizada
+              </Text>
+            </div>
+          </div>
+
+          {/* User's SPOTs Section - Only if connected */}
+          {isConnected && totalSpots > 0 && (
             <>
-              {/* Stats Section */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-purple-100">
-                  <div className="text-3xl font-bold text-purple-600 mb-2">{mockSpots.length}</div>
-                  <div className="text-gray-600">Total SPOT Badges</div>
-                </div>
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-purple-100">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">2024</div>
-                  <div className="text-gray-600">Events Attended</div>
-                </div>
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-purple-100">
-                  <div className="text-3xl font-bold text-green-600 mb-2">100%</div>
-                  <div className="text-gray-600">Collection Complete</div>
-                </div>
-              </div>
-
-              {/* SPOT Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {mockSpots.map((spotBadge) => (
-                  <div
-                    key={spotBadge.id}
-                    className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border-2 border-purple-100 hover:border-purple-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-                  >
-                    {/* SPOT Badge Circle */}
-                    <div className={`bg-gradient-to-br ${spotBadge.color} p-8 flex items-center justify-center`}>
-                      <div className="w-32 h-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-4 border-white/30 shadow-inner">
-                        <span className="text-6xl">{spotBadge.image}</span>
-                      </div>
-                    </div>
-
-                    {/* SPOT Info */}
-                    <div className="p-6">
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">{spotBadge.name}</h3>
-                      <div className="flex items-center text-gray-600 mb-4">
-                        <span className="text-sm">📅 {new Date(spotBadge.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
-                          Verified
-                        </span>
-                        <span className="text-xs text-gray-500">#{spotBadge.id.toString().padStart(4, '0')}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Empty State Message */}
-              <div className="mt-12 text-center">
-                <Text as="p" size="md" className="text-gray-500">
-                  Attend events and claim more SPOT badges to grow your collection!
+              <div className="mb-8">
+                <Text as="h2" size="lg" className="text-2xl md:text-3xl font-headline text-stellar-black mb-2">
+                  Tu Colección
                 </Text>
+                <Text as="p" size="md" className="text-stellar-black font-subhead italic">
+                  {totalSpots} {totalSpots === 1 ? 'SPOT' : 'SPOTs'} en tu colección
+                </Text>
+              </div>
+
+              {/* Stats Section - Stellar Brand Colors */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-12">
+                <div className="bg-stellar-white rounded-xl p-4 md:p-6 shadow-md border-2 border-stellar-lilac/20">
+                  <div className="text-2xl md:text-3xl font-headline text-stellar-lilac mb-1 md:mb-2">
+                    {totalSpots}
+                  </div>
+                  <div className="text-sm md:text-base text-stellar-black font-body">Total SPOTs</div>
+                </div>
+                <div className="bg-stellar-white rounded-xl p-4 md:p-6 shadow-md border-2 border-stellar-gold/30">
+                  <div className="text-2xl md:text-3xl font-headline text-stellar-gold mb-1 md:mb-2">
+                    {Object.keys(groupedSpots).length}
+                  </div>
+                  <div className="text-sm md:text-base text-stellar-black font-body">Meses activos</div>
+                </div>
+                <div className="bg-stellar-white rounded-xl p-4 md:p-6 shadow-md border-2 border-stellar-teal/20">
+                  <div className="text-2xl md:text-3xl font-headline text-stellar-teal mb-1 md:mb-2">
+                    {new Date().getFullYear()}
+                  </div>
+                  <div className="text-sm md:text-base text-stellar-black font-body">Año actual</div>
+                </div>
+              </div>
+
+              {/* SPOTs grouped by month */}
+              <div>
+                {Object.keys(groupedSpots).length === 0 ? (
+                  <div className="text-center py-12">
+                    <Text as="p" size="md" className="text-gray-500">
+                      No hay SPOTs para mostrar
+                    </Text>
+                  </div>
+                ) : (
+                  Object.values(groupedSpots).map((group: { year: number; month: string; spots: SpotData[] }) => (
+                    <MonthSection
+                      key={`${group.year}-${group.month}`}
+                      month={group.month}
+                      year={group.year}
+                      spots={group.spots}
+                      onSpotClick={(spot) => {
+                        // TODO: Navegar a detalle del SPOT
+                        console.log("SPOT clicked:", spot);
+                      }}
+                    />
+                  ))
+                )}
               </div>
             </>
           )}
+
+          {/* Empty State - Not connected or no SPOTs */}
+          {isConnected && totalSpots === 0 && (
+            <div className="bg-stellar-white rounded-2xl shadow-lg p-8 md:p-12 text-center border-2 border-stellar-lilac/20">
+              <div className="text-6xl mb-6">🎯</div>
+              <Text as="h2" size="lg" className="text-2xl font-headline text-stellar-black mb-4">
+                Aún no tienes SPOTs
+              </Text>
+              <Text as="p" size="md" className="text-stellar-black max-w-md mx-auto mb-6 font-body">
+                Asiste a eventos y reclama tus SPOTs para comenzar tu colección.
+              </Text>
+              <Button
+                onClick={() => navigate("/mint")}
+                variant="primary"
+                size="lg"
+                className="bg-stellar-gold text-stellar-black hover:bg-yellow-400 font-semibold"
+              >
+                Reclamar mi Primer SPOT
+              </Button>
+            </div>
+          )}
+
+          {/* Not Connected State */}
+          {!isConnected && (
+            <div className="bg-stellar-white rounded-2xl shadow-lg p-8 md:p-12 text-center border-2 border-stellar-lilac/20">
+              <div className="text-6xl mb-6">🔐</div>
+              <Text as="h2" size="lg" className="text-2xl font-headline text-stellar-black mb-4">
+                Conecta tu Wallet
+              </Text>
+              <Text as="p" size="md" className="text-stellar-black max-w-md mx-auto mb-6 font-body">
+                Conecta tu wallet de Stellar para ver tu colección de SPOTs y reclamar nuevos.
+              </Text>
+              <Button
+                onClick={() => navigate("/profile")}
+                variant="primary"
+                size="lg"
+                className="bg-stellar-gold text-stellar-black hover:bg-yellow-400 font-semibold"
+              >
+                Conectar Wallet
+              </Button>
+            </div>
+          )}
+        </div>
         </div>
       </Layout.Inset>
     </Layout.Content>
