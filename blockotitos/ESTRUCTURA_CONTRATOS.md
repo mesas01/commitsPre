@@ -9,7 +9,7 @@ Esta es la carpeta **principal** donde están los contratos inteligentes escrito
 
 ```
 contracts/
-├── poap/              # Contrato POAP/SPOT principal
+├── poap/              # Contrato principal de SPOT
 │   ├── Cargo.toml
 │   └── src/
 │       ├── contract.rs

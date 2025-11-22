@@ -6,6 +6,7 @@ import MonthSection from "../components/spot/MonthSection";
 import { SpotData } from "../components/spot/SpotCard";
 import { groupSpotsByMonth, getTotalSpots } from "../utils/spotGrouping";
 import TldrCard from "../components/layout/TldrCard";
+import ConnectAccount from "../components/ConnectAccount";
 
 // Mock SPOT data for visual purposes - TODO: Obtener del contrato
 // Imágenes reales desde /public/images/events/
@@ -64,12 +65,12 @@ const Home: React.FC = () => {
       <Layout.Inset>
         <div className="min-h-screen bg-stellar-white py-6 md:py-12">
         <div className="max-w-7xl mx-auto">
-          {/* Hero Section - Brand Manual */}
+          {/* Hero Section - Brand Story */}
           <section className="mb-12 md:mb-16">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-24">
               <div className="col-span-full lg:col-span-17 brand-surface p-6 md:p-10 text-center lg:text-left">
                 <div className="brand-eyebrow text-stellar-navy/70 mb-3">
-                  Design Ethos · Helpful design is humble, not invisible
+                  SPOT · Proof of Attendance en Stellar
                 </div>
                 <div className="text-6xl md:text-7xl mb-6">🎯</div>
                 <Text
@@ -93,86 +94,102 @@ const Home: React.FC = () => {
                   size="md"
                   className="text-base md:text-lg text-stellar-black/90 max-w-3xl mx-auto lg:mx-0 mb-8 font-body"
                 >
-                  SPOT aplica el Brand Manual 2023 de Stellar para que cada reclamo y
-                  cada evento refleje nuestra identidad: oro generoso, tipografías enérgicas,
-                  highlights hechos a mano y una voz que guía sin perder la humildad.
+                  SPOT es tu comprobante coleccionable en Stellar: diseña la pieza, define la ventana de reclamo y entrega recuerdos verificables que demuestran asistencia ante sponsors, instituciones y comunidades.
                 </Text>
 
-                {/* CTA Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start items-center">
-                  <Button
-                    onClick={() => navigate("/mint")}
-                    variant="primary"
-                    size="lg"
-                    className="bg-stellar-gold text-stellar-black hover:bg-yellow-400 font-semibold rounded-full px-8 py-3 shadow-md hover:shadow-lg transition-all"
-                  >
-                    ⚡ Reclamar SPOT
-                  </Button>
-                  <Button
-                    onClick={() => navigate("/create-event")}
-                    variant="secondary"
-                    size="lg"
-                    className="bg-stellar-lilac text-stellar-black hover:bg-stellar-lilac/80 font-semibold rounded-full px-8 py-3 shadow-md hover:shadow-lg transition-all"
-                  >
-                    ➕ Crear Evento
-                  </Button>
-                  {isConnected && (
+                {/* Wallet + CTA Buttons */}
+                <div className="flex flex-col gap-4 items-center lg:items-start">
+                  <div className="w-full flex justify-center lg:justify-start">
+                    <ConnectAccount />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start items-center w-full">
                     <Button
-                      onClick={() => navigate("/profile")}
-                      variant="tertiary"
+                      onClick={() => navigate("/mint")}
+                      variant="primary"
                       size="lg"
-                      className="bg-stellar-white border-2 border-stellar-black/10 text-stellar-black hover:bg-stellar-black/5 font-medium rounded-full px-8 py-3 shadow-sm hover:shadow-md transition-all"
+                      className="bg-stellar-gold text-stellar-black hover:bg-yellow-400 font-semibold rounded-full px-8 py-3 shadow-md hover:shadow-lg transition-all w-full sm:w-auto"
                     >
-                      👤 Mis SPOTs
+                      ⚡ Reclamar SPOT
                     </Button>
-                  )}
+                    <Button
+                      onClick={() => navigate("/create-event")}
+                      variant="secondary"
+                      size="lg"
+                      className="bg-stellar-lilac text-stellar-black hover:bg-stellar-lilac/80 font-semibold rounded-full px-8 py-3 shadow-md hover:shadow-lg transition-all w-full sm:w-auto"
+                    >
+                      ➕ Crear Evento
+                    </Button>
+                    {isConnected && (
+                      <Button
+                        onClick={() => navigate("/profile")}
+                        variant="tertiary"
+                        size="lg"
+                        className="bg-stellar-white border-2 border-stellar-black/10 text-stellar-black hover:bg-stellar-black/5 font-medium rounded-full px-8 py-3 shadow-sm hover:shadow-md transition-all w-full sm:w-auto"
+                      >
+                        👤 Mis SPOTs
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
 
               <div className="col-span-full lg:col-span-7">
                 <TldrCard
-                  summary="Aplicamos la guía de Stellar para rediseñar SPOT con una jerarquía clara, tonos humanos y mobile-first."
+                  summary="SPOT convierte tus eventos en coleccionables digitales verificados. Configura arte, cupos y métricas desde un mismo panel."
                   bullets={[
-                    { label: "Crea", detail: "Eventos con grid de 24 columnas, tipografías Anton/Lora e imagen hero." },
-                    { label: "Reclama", detail: "Métodos QR, link, código, geo y NFC con botones oro y lilas." },
-                    { label: "Confía", detail: "Todo vive en la Stellar network con mensajes directos y TL;DR visible." },
+                    {
+                      label: "Crea experiencias",
+                      detail:
+                        "Sube tu imagen, define cupos y programa fechas de reclamo para cada evento sin depender de desarrolladores.",
+                    },
+                    {
+                      label: "Reclama sin fricción",
+                      detail:
+                        "QR, link, código, geofence o NFC listos para usar en campo, con botones visibles que empujan la conversión.",
+                    },
+                    {
+                      label: "Demuestra valor",
+                      detail:
+                        "Cada comprobante vive en Stellar: útil para reportes, patrocinios y transparencia con tu comunidad.",
+                    },
                   ]}
-                  footer="Si eres nuevo, lee el resumen y actúa. Si ya sabes, ve directo al CTA."
+                  footer="¿Primera vez con SPOT? Sigue este resumen. ¿Ya lo dominas? Ve directo a Reclamar o Crear."
                 />
               </div>
             </div>
           </section>
 
-          {/* Find your way Section */}
+          {/* Audience Guidance Section */}
           <section className="brand-surface p-6 md:p-8 mb-12 md:mb-16">
             <div className="brand-eyebrow text-stellar-navy/70 mb-6">
-              Find your way · Guía visual
+              SPOT para cada equipo
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="rounded-2xl border border-stellar-black/10 bg-stellar-gold/10 p-6 shadow-brand-soft">
                 <Text as="h3" size="md" className="font-headline text-2xl text-stellar-black mb-2 uppercase">
-                  Innovadores & Builders
+                  Organizadores & builders
                 </Text>
                 <Text as="p" size="sm" className="text-stellar-black/80 font-body mb-4">
-                  Ve a la izquierda: experimenta rápido, conecta APIs, reclama SPOTs desde móvil.
+                  Configura certificados coleccionables en minutos, conecta APIs si lo necesitas y maneja registros desde el móvil o el escenario.
                 </Text>
                 <ul className="space-y-2 text-sm font-body text-stellar-black/80">
-                  <li>• Código abierto con contrato Soroban.</li>
-                  <li>• Highlight hechos a mano para cada release.</li>
-                  <li>• Acceso directo al Debugger.</li>
+                  <li>• Herramientas self-service para crear, editar y pausar eventos.</li>
+                  <li>• Integraciones Soroban listas para automatizar claims.</li>
+                  <li>• Debugger disponible para equipos técnicos.</li>
                 </ul>
               </div>
               <div className="rounded-2xl border border-stellar-black/10 bg-stellar-lilac/10 p-6 shadow-brand-soft">
                 <Text as="h3" size="md" className="font-headline text-2xl text-stellar-black mb-2 uppercase">
-                  Banca & Policy Makers
+                  Sponsors & instituciones
                 </Text>
                 <Text as="p" size="sm" className="text-stellar-black/80 font-body mb-4">
-                  Ve a la derecha: mensajes claros, copy pragmático y confianza institucional.
+                  Obtén reportes claros sobre asistencia verificada y comparte pruebas on-chain con aliados o reguladores.
                 </Text>
                 <ul className="space-y-2 text-sm font-body text-stellar-black/80">
-                  <li>• Métricas visibles, lenguaje directo.</li>
-                  <li>• Tipografía serif para narrativas extensas.</li>
-                  <li>• Colores navy y warm grey para reportes.</li>
+                  <li>• Métricas visibles para patrocinadores y equipo comercial.</li>
+                  <li>• Evidencia inmutable hospedada en la red Stellar.</li>
+                  <li>• Copys concisos para informes y aprobaciones rápidas.</li>
                 </ul>
               </div>
             </div>

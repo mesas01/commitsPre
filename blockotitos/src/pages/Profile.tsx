@@ -6,7 +6,7 @@ import ConnectAccount from "../components/ConnectAccount";
 import TldrCard from "../components/layout/TldrCard";
 
 const Profile: React.FC = () => {
-  const { address, balances } = useWallet();
+  const { address, balances, disconnect } = useWallet();
   const navigate = useNavigate();
   const isConnected = !!address;
 
@@ -44,11 +44,11 @@ const Profile: React.FC = () => {
               </div>
               <div className="col-span-full lg:col-span-8">
                 <TldrCard
-                  summary="El Brand Manual pide conclusiones upfront: aquí está tu estado."
+                  summary="Aquí ves tu wallet Stellar conectada, balances y accesos rápidos para crear eventos o reclamar tus comprobantes."
                   bullets={[
                     { label: "Wallet", detail: "Dirección visible, botón copiar y balance XLM." },
                     { label: "Acciones", detail: "CTA claros para ver SPOTs, crear eventos y reclamar." },
-                    { label: "Confianza", detail: "Tipografía serif para subtítulos y warm grey para datos." },
+                    { label: "Confianza", detail: "Datos claros, estados legibles y opción para desconectar cuando lo necesites." },
                   ]}
                 />
               </div>
@@ -163,8 +163,7 @@ const Profile: React.FC = () => {
                   variant="tertiary"
                   size="md"
                   onClick={() => {
-                    // TODO: Implementar desconexión
-                    window.location.reload();
+                    void disconnect().then(() => navigate("/"));
                   }}
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 >

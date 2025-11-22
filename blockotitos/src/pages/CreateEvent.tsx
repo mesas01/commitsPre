@@ -265,7 +265,7 @@ const CreateEvent: React.FC = () => {
               </div>
               <div className="col-span-full lg:col-span-8">
                 <TldrCard
-                  summary="La guía de Stellar indica que demos el contexto primero."
+                  summary="Antes de completar el formulario, asegúrate de tener arte, fechas y métodos de entrega listos."
                   bullets={[
                     { label: "Visual", detail: "Usa imágenes humanas y resalta highlights." },
                     { label: "Tiempo", detail: "Define claim window claro (inicio/fin)." },

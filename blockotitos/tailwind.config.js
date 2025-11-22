@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Stellar Brand Colors (Brand Manual 2023)
+        // Stellar Brand Colors
         // Primary Colors
         'stellar-gold': '#FDDA24',      // Generous Gold - Primary brand color
         'stellar-black': '#0F0F0F',     // Process Black

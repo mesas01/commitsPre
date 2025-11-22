@@ -79,7 +79,7 @@ despliegue su propio backend con su clave).
 
   - `INTEGRATION_CREATOR_SECRET`: clave secreta del organizador aprobado.
   - `INTEGRATION_CREATOR_ADDRESS`: cuenta pública correspondiente.
-  - `INTEGRATION_CLAIMER_ADDRESS`: cuenta pública que recibirá el POAP.
+  - `INTEGRATION_CLAIMER_ADDRESS`: cuenta pública que recibirá el coleccionable de asistencia.
   - Opcional: `INTEGRATION_CLAIM_PAYER_SECRET` (si no se usa `CLAIM_PAYER_SECRET`/`ADMIN_SECRET`).
   - (Opcional) `INTEGRATION_METADATA_URI` e `INTEGRATION_IMAGE_URL`.
 
@@ -94,7 +94,7 @@ despliegue su propio backend con su clave).
 
   Este comando levanta el backend con tus credenciales, envía un `POST /events/create`
   real, registra el nuevo `event_count`, aprueba/revoca un creador y ejecuta un `POST /events/claim`
-  para mintiar un POAP con la cuenta indicada. Los resultados y `signedEnvelope`s se guardan
+  para mintiar el coleccionable con la cuenta indicada. Los resultados y `signedEnvelope`s se guardan
   en `logs/backend.integration.log`.
 
 ## Probar con Postman / curl

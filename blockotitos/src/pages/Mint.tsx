@@ -158,7 +158,7 @@ const Mint: React.FC = () => {
               </div>
               <div className="col-span-full lg:col-span-8">
                 <TldrCard
-                  summary="El Brand Manual pide decisiones rápidas. Las resumimos en un card accesible."
+                  summary="Decide cómo reclamar tu comprobante: QR, link, código, geolocalización o NFC según el contexto del evento."
                   bullets={[
                     { label: "QR primero", detail: "Experiencia más rápida en eventos físicos." },
                     { label: "Link único", detail: "Ideal para claims remotos con copy pragmático." },

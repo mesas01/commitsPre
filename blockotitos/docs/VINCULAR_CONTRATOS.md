@@ -19,13 +19,13 @@ Este documento explica cómo vincular el frontend con los contratos smart contra
 2. **`spot-factory`**: Factory para desplegar instancias de eventos (pendiente de completar)
    - Archivo: `contracts/spot-factory/src/contract.rs`
 
-3. **`spot-event`**: Contrato individual por evento (alternativa al poap)
+3. **`spot-event`**: Contrato individual por evento (alternativa al contrato principal)
    - Archivo: `contracts/spot-event/src/contract.rs`
 
 ## Hooks Creados
 
 ### `useSpotContract()`
-Hook para obtener un cliente del contrato SPOT (POAP).
+Hook para obtener un cliente del contrato SPOT (coleccionable de asistencia).
 
 ```typescript
 import { useSpotContract } from "../hooks/useSpotContract";

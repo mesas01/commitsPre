@@ -44,6 +44,7 @@ export interface WalletContextType {
   networkPassphrase?: string;
   signTransaction: typeof wallet.signTransaction;
   updateBalances: () => Promise<void>;
+  disconnect: () => Promise<void>;
 }
 
 const POLL_INTERVAL = 1000;
@@ -54,6 +55,7 @@ export const WalletContext = // eslint-disable-line react-refresh/only-export-co
     balances: {},
     updateBalances: async () => {},
     signTransaction,
+    disconnect: async () => {},
   });
 
 export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
@@ -64,7 +66,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   const [isPending, startTransition] = useTransition();
   const popupLock = useRef(false);
 
-  const nullify = () => {
+  const nullify = useCallback(() => {
     setAddress(undefined);
     setNetwork(undefined);
     setNetworkPassphrase(undefined);
@@ -73,7 +75,17 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     storage.setItem("walletAddress", "");
     storage.setItem("walletNetwork", "");
     storage.setItem("networkPassphrase", "");
-  };
+  }, []);
+
+  const disconnect = useCallback(async () => {
+    try {
+      await wallet.disconnect();
+    } catch (error) {
+      console.error("Error disconnecting wallet", error);
+    } finally {
+      nullify();
+    }
+  }, [nullify]);
 
   const updateBalances = useCallback(async () => {
     if (!address) {
@@ -193,8 +205,17 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       updateBalances,
       isPending,
       signTransaction,
+      disconnect,
     }),
-    [address, network, networkPassphrase, balances, updateBalances, isPending],
+    [
+      address,
+      network,
+      networkPassphrase,
+      balances,
+      updateBalances,
+      isPending,
+      disconnect,
+    ],
   );
 
   return <WalletContext value={contextValue}>{children}</WalletContext>;

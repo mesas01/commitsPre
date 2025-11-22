@@ -186,7 +186,7 @@ test(
 );
 
 test(
-  "claim endpoint mints a POAP",
+  "claim endpoint mints the attendance collectible",
   { skip: skipReason, timeout: 180_000 },
   async (t) => {
     if (!lastCreatedEventId) {

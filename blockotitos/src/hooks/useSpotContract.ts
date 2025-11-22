@@ -4,7 +4,7 @@ import { network } from "../contracts/util";
 import { contract as stellarContract } from "@stellar/stellar-sdk";
 
 /**
- * Hook para obtener un cliente del contrato SPOT (POAP)
+ * Hook para obtener un cliente del contrato SPOT (coleccionable de asistencia)
  * 
  * @param contractId - ID del contrato (opcional, usa variable de entorno si no se proporciona)
  * @returns Cliente del contrato configurado
