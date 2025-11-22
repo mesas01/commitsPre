@@ -2,12 +2,13 @@ import React from "react";
 import { Text } from "@stellar/design-system";
 
 export interface SpotData {
-  id: number;
+  id: number | string;
   name: string;
   date: string;
   image: string; // Puede ser emoji, URL de imagen, o ruta relativa a /images/events/
   color?: string;
-  eventId?: string;
+  eventId?: number | string;
+  isPlaceholder?: boolean;
 }
 
 interface SpotCardProps {
@@ -23,6 +24,8 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onClick }) => {
   });
 
   const colorClass = spot.color || "from-stellar-lilac/20 to-stellar-lilac/40";
+  const displayId = (spot.eventId ?? spot.id)?.toString();
+  const badgeId = displayId ? displayId.padStart(4, '0') : '----';
 
   return (
     <div
@@ -72,7 +75,9 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onClick }) => {
           <span className="text-xs font-semibold text-stellar-lilac bg-stellar-lilac/10 px-3 py-1 rounded-full font-body">
             Verified
           </span>
-          <span className="text-xs text-stellar-black/50 font-body">#{spot.id.toString().padStart(4, '0')}</span>
+          <span className="text-xs text-stellar-black/50 font-body">
+            #{badgeId}
+          </span>
         </div>
       </div>
     </div>

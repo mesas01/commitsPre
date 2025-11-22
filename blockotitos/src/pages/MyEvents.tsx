@@ -163,10 +163,16 @@ const MyEvents: React.FC = () => {
     () => sortEventsByDate(localEvents),
     [localEvents],
   );
-  const eventsToDisplay = useMemo(
-    () => sortEventsByDate([...sortedContractEvents, ...sortedLocalEvents]),
-    [sortedContractEvents, sortedLocalEvents],
-  );
+  const eventsToDisplay = useMemo(() => {
+    const eventsById = new Map<string, EventData>();
+    sortedLocalEvents.forEach((event) => {
+      eventsById.set(event.id, event);
+    });
+    sortedContractEvents.forEach((event) => {
+      eventsById.set(event.id, event);
+    });
+    return sortEventsByDate(Array.from(eventsById.values()));
+  }, [sortedContractEvents, sortedLocalEvents]);
   const isLoadingEvents =
     isLoadingLocalEvents || (isConnected && isLoadingOnchainEvents);
   const eventsError = onchainError ? (onchainError as Error) : null;

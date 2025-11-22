@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Layout, Text, Button } from "@stellar/design-system";
 import { useWallet } from "../hooks/useWallet";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +7,10 @@ import { SpotData } from "../components/spot/SpotCard";
 import { groupSpotsByMonth, getTotalSpots } from "../utils/spotGrouping";
 import TldrCard from "../components/layout/TldrCard";
 import ConnectAccount from "../components/ConnectAccount";
+import {
+  getClaimedSpots,
+  mapStoredSpotToSpotData,
+} from "../utils/claimedSpots";
 
 // Mock SPOT data for visual purposes - TODO: Obtener del contrato
 // Imágenes reales desde /public/images/events/
@@ -17,6 +21,7 @@ const mockSpots: SpotData[] = [
     date: "2025-11-15",
     image: "/images/events/stellarpalooza.jpg",
     color: "from-stellar-lilac/30 to-stellar-lilac/50",
+    isPlaceholder: true,
   },
   {
     id: 2,
@@ -24,6 +29,7 @@ const mockSpots: SpotData[] = [
     date: "2025-11-20",
     image: "/images/events/hack+.jpg",
     color: "from-stellar-gold/30 to-stellar-lilac/50",
+    isPlaceholder: true,
   },
   {
     id: 3,
@@ -45,6 +51,7 @@ const mockSpots: SpotData[] = [
     date: "2025-09-28",
     image: "/images/events/autumfridays.jpg",
     color: "from-stellar-lilac/30 to-stellar-gold/50",
+    isPlaceholder: true,
   },
 ];
 
@@ -52,10 +59,48 @@ const Home: React.FC = () => {
   const { address } = useWallet();
   const navigate = useNavigate();
   const isConnected = !!address;
+  const [claimedSpots, setClaimedSpots] = useState<SpotData[]>([]);
+
+  useEffect(() => {
+    if (!address) {
+      setClaimedSpots([]);
+      return;
+    }
+
+    const loadClaimedSpots = () => {
+      const stored = getClaimedSpots(address).map(mapStoredSpotToSpotData);
+      const sorted = [...stored].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      );
+      setClaimedSpots(sorted);
+    };
+
+    loadClaimedSpots();
+
+    const handleUpdate = () => loadClaimedSpots();
+    window.addEventListener("storage", handleUpdate);
+    window.addEventListener("claimedSpotsUpdated", handleUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleUpdate);
+      window.removeEventListener("claimedSpotsUpdated", handleUpdate);
+    };
+  }, [address]);
   
+  const spotsToDisplay = useMemo(() => {
+    if (claimedSpots.length === 0) {
+      return mockSpots;
+    }
+    return [...claimedSpots, ...mockSpots];
+  }, [claimedSpots]);
+
   // Agrupar SPOTs por mes/año
-  const groupedSpots = groupSpotsByMonth(mockSpots);
-  const totalSpots = getTotalSpots(mockSpots);
+  const groupedSpots = useMemo(
+    () => groupSpotsByMonth(spotsToDisplay),
+    [spotsToDisplay],
+  );
+  const totalSpots = getTotalSpots(spotsToDisplay);
+  const hasDisplaySpots = spotsToDisplay.length > 0;
 
   // TODO: Obtener SPOTs reales del contrato cuando el wallet esté conectado
   // const { data: spots } = useSpotCollection(address);
@@ -205,7 +250,7 @@ const Home: React.FC = () => {
           )}
 
           {/* User's SPOTs Section - Only if connected */}
-          {isConnected && totalSpots > 0 && (
+          {isConnected && hasDisplaySpots && (
             <>
               <div className="mb-8">
                 <Text as="h2" size="lg" className="text-2xl md:text-3xl font-headline text-stellar-black mb-2">

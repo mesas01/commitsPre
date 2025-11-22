@@ -3,8 +3,12 @@ import { Layout, Text, Button, Input } from "@stellar/design-system";
 import { useWallet } from "../hooks/useWallet";
 import { useNavigate } from "react-router-dom";
 import { useNotification } from "../hooks/useNotification";
-import { claimEventRequest } from "../util/backend";
+import { claimEventRequest, fetchOnchainEvents } from "../util/backend";
 import TldrCard from "../components/layout/TldrCard";
+import {
+  mapEventToClaimedSpot,
+  upsertClaimedSpot,
+} from "../utils/claimedSpots";
 
 const Mint: React.FC = () => {
   const { address } = useWallet();
@@ -19,6 +23,29 @@ const Mint: React.FC = () => {
 
   const handleMethodSelect = (method: string) => {
     setActiveMethod(method);
+  };
+
+  const persistClaimedSpotLocally = async (eventId: number) => {
+    if (!address) return;
+
+    try {
+      const events = await fetchOnchainEvents();
+      const match = events.find((event) => event.eventId === eventId);
+      if (match) {
+        upsertClaimedSpot(address, mapEventToClaimedSpot(match));
+        return;
+      }
+    } catch (error) {
+      console.warn("No se pudo obtener metadata del evento:", error);
+    }
+
+    upsertClaimedSpot(address, {
+      eventId,
+      name: `SPOT #${eventId}`,
+      date: new Date().toISOString(),
+      image: "🎯",
+      color: "from-stellar-teal/20 to-stellar-teal/40",
+    });
   };
 
   const extractEventIdFromLink = (link: string): number | null => {
@@ -71,6 +98,7 @@ const Mint: React.FC = () => {
         title: "Reclamo enviado",
         message: `Tx enviada: ${response.txHash}`,
       });
+      await persistClaimedSpotLocally(eventId);
       navigate("/");
     } catch (error: any) {
       console.error("Error al reclamar SPOT:", error);
