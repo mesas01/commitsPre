@@ -27,6 +27,7 @@
 - [Modelo de Negocio](#-modelo-de-negocio)
 - [Tech Stack](#-tech-stack)
 - [Instalación](#-instalación)
+- [Equipo](#-equipo)
 - [Decisiones de Diseño](#-decisiones-de-diseño)
 - [Contribuir](#-contribuir)
 
@@ -93,19 +94,17 @@ SPOT permite a organizadores de eventos:
 ```mermaid
 graph TB
     subgraph "Frontend Layer"
-        UI[React/Next.js App]
+        UI[React App]
         Wallet[Freighter Wallet]
         UI --> Wallet
     end
 
     subgraph "Backend Layer"
-        Backend[Firebase Functions]
-        Auth[Firebase Auth]
-        Storage[Firebase Storage]
-        Firestore[Firestore DB]
-        Backend --> Auth
+        Backend[Express Backend]
+        Storage[Storage Service]
+        DB[Database]
         Backend --> Storage
-        Backend --> Firestore
+        Backend --> DB
     end
 
     subgraph "Blockchain Layer - Stellar"
@@ -184,9 +183,9 @@ graph TB
     subgraph "Off-Chain Storage"
         JSON[JSON File]
         IMAGE[Image File]
-        IPFS[IPFS / Firebase Storage]
-        JSON --> IPFS
-        IMAGE --> IPFS
+        STORAGE[Storage Service]
+        JSON --> STORAGE
+        IMAGE --> STORAGE
     end
 
     subgraph "Metadata Content"
@@ -208,7 +207,7 @@ graph TB
 
 **Qué se guarda donde**:
 - **On-Chain**: Metadata esencial del evento (nombre, fecha, lugar, descripción, URIs) - Verificable e inmutable
-- **Off-Chain**: Imágenes de alta resolución (Firebase Storage) - Optimizado para costos
+- **Off-Chain**: Imágenes de alta resolución - Optimizado para costos
 
 ---
 
@@ -225,35 +224,34 @@ sequenceDiagram
     participant B as Backend
     participant F as Factory Contract
     participant E as Event Contract
-    participant S as Firebase Storage
+    participant S as Storage
 
-    O->>UI: Crear evento + elegir plan
-    UI->>B: Validar plan y calcular costo
-    B->>B: Verificar créditos disponibles
-    B->>O: Solicitar pago (Stellar)
-    O->>B: Pagar XLM
-    B->>B: Descontar créditos del plan
+    O->>UI: Crear evento
+    UI->>B: Validar y procesar
+    B->>B: Verificar plan (gratis o pago)
+    alt Evento >100 SPOTs o Empresarial
+        B->>O: Solicitar pago (Stellar)
+        O->>B: Pagar XLM
+    end
     B->>S: Subir imagen del SPOT
     S-->>B: URL de imagen
     B->>F: Crear nuevo evento
     F->>E: Instanciar Event Contract
     E-->>F: Contract Address
     F-->>B: Event ID + Contract Address
-    B->>S: Guardar metadatos (Firestore)
+    B->>DB: Guardar metadatos
     B-->>UI: Evento creado exitosamente
     UI-->>O: Confirmación
 ```
 
 **Pasos detallados**:
 1. El organizador completa el formulario de creación de evento
-2. Selecciona un plan y la cantidad de SPOTs a emitir
-3. El sistema valida el plan y calcula el costo
-4. El organizador paga con XLM (Stellar)
-5. Los créditos se descuentan del plan mensual
-6. La imagen del SPOT se sube a Firebase Storage
-7. El Factory Contract despliega un nuevo Event Contract
-8. La metadata se guarda en Firestore para indexación
-9. El evento está listo para distribuir SPOTs
+2. El sistema determina si el evento es gratuito o requiere pago
+3. Si requiere pago (>100 SPOTs o empresarial), se procesa el pago con XLM
+4. La imagen del SPOT se sube al servicio de almacenamiento
+5. El Factory Contract despliega un nuevo Event Contract
+6. La metadata se guarda en la base de datos para indexación
+7. El evento está listo para distribuir SPOTs
 
 ### Flujo de Claim de SPOT
 
@@ -397,134 +395,96 @@ graph TB
 
 ## 💰 Modelo de Negocio
 
-### Estructura de Planes
+### Estructura de Precios
 
-SPOT utiliza un modelo **pay-as-you-go** (pago por uso) con planes basados en costos de almacenamiento de Stellar:
+SPOT utiliza un modelo **freemium** con opciones de pago para eventos grandes y empresariales:
 
-#### 🆓 Plan FREE (Freemium)
+#### 🆓 Eventos Gratuitos (Personales y Pequeños)
+
+Los eventos **personales y pequeños** (hasta 100 SPOTs) son **completamente gratuitos**:
 
 | Característica | Valor |
 |----------------|-------|
 | **Precio** | 0 XLM |
-| **Eventos por mes** | 1 |
-| **NFTs por evento** | Hasta 50 NFTs |
-| **NFTs totales/mes** | 50 NFTs |
-| **Wallets delegadas** | 2 gratis |
-| **Almacenamiento** | Metadata básica (hash/IPFS) |
-| **Período de claim** | Máximo 1 semana |
-| **Métodos disponibles** | QR, Link |
-
-**Ideal para**: Organizadores pequeños, eventos de prueba
-
----
-
-#### 🚀 Plan STARTER
-
-| Característica | Valor |
-|----------------|-------|
-| **Precio** | 2 XLM por evento |
-| **Eventos por mes** | 5 (o 5 simultáneos) |
-| **NFTs por evento** | Hasta 200 NFTs |
-| **NFTs totales/mes** | 1,000 NFTs (créditos compartibles) |
-| **Wallets delegadas** | 2 gratis + 0.5 XLM por wallet adicional |
-| **Almacenamiento** | Metadata JSON completa on-chain |
-| **Período de claim** | Configurable (máximo 1 semana) |
+| **Límite de SPOTs** | Hasta 100 SPOTs por evento |
+| **Eventos** | Ilimitados |
 | **Métodos disponibles** | QR, Link, Códigos compartidos |
+| **Almacenamiento** | Metadata básica |
+| **Período de claim** | Máximo 1 semana |
 
-**Ideal para**: Organizadores regulares, meetups, conferencias pequeñas
-
-**Ejemplo de uso**:
-- Compras Plan STARTER → Tienes 1,000 créditos de NFTs
-- Creas Evento 1 con 200 NFTs → Restan 800 créditos
-- Creas Evento 2 con 300 NFTs → Restan 500 créditos
-- Creas Evento 3 con 500 NFTs → Restan 0 créditos
-- Si necesitas más, compras créditos adicionales o esperas al próximo mes
+**Ideal para**: Eventos personales, meetups pequeños, reuniones familiares, eventos comunitarios
 
 ---
 
-#### ⭐ Plan PRO
+#### 💼 Eventos de Pago (Grandes y Empresariales)
+
+Los eventos que **exceden 100 SPOTs** o son de **naturaleza empresarial** requieren pago:
 
 | Característica | Valor |
 |----------------|-------|
-| **Precio** | 5 XLM por evento |
-| **Eventos por mes** | Ilimitados |
-| **NFTs por evento** | Hasta 1,000 NFTs |
-| **NFTs totales/mes** | Ilimitados (pago por evento) |
-| **Wallets delegadas** | 2 gratis + 0.3 XLM por wallet adicional |
-| **Almacenamiento** | Metadata JSON completa on-chain |
-| **Período de claim** | Configurable (máximo 1 semana) |
-| **Métodos disponibles** | Todos (QR, Link, Geolocalización, Códigos) |
+| **Precio** | Variable según cantidad de SPOTs |
+| **Límite de SPOTs** | Ilimitados |
+| **Eventos** | Ilimitados |
+| **Métodos disponibles** | Todos (QR, Link, Geolocalización, Códigos, NFC) |
+| **Almacenamiento** | Metadata completa on-chain |
+| **Período de claim** | Configurable |
 | **Soporte** | Prioridad |
-
-**Ideal para**: Organizadores profesionales, conferencias grandes, hackathons
-
----
-
-#### 🏢 Plan ENTERPRISE (Custom)
-
-| Característica | Valor |
-|----------------|-------|
-| **Precio** | Negociable (mensualidad o por evento) |
-| **Eventos por mes** | Ilimitados |
-| **NFTs por evento** | Ilimitados |
-| **Wallets delegadas** | Ilimitadas gratis |
-| **Almacenamiento** | Metadata JSON completa on-chain |
-| **Período de claim** | Personalizable |
-| **Métodos disponibles** | Todos + personalizaciones |
-| **Soporte** | Dedicado |
 | **Personalización** | APIs custom, branding, integraciones |
 
-**Ideal para**: Grandes empresas, plataformas de eventos, partners estratégicos
+**Ideal para**: Conferencias grandes, hackathons, eventos corporativos, plataformas de eventos
 
 ---
 
-### Sistema de Créditos
+### 💝 Sistema de Donaciones
 
-**¿Cómo funcionan los créditos?**
+**Las personas pueden donar y recibir un SPOT exclusivo**:
 
-1. **Compra de Plan**: Al comprar un plan, recibes créditos de NFTs para ese mes
-2. **Uso Flexible**: Puedes usar los créditos en múltiples eventos
-3. **Compartibles**: Si compras 1,000 NFTs/mes, puedes crear 5 eventos con 200 NFTs cada uno, o 1 evento con 1,000 NFTs
-4. **Expiración**: Los créditos no usados expiran al final del mes calendario
-5. **Compra Adicional**: Puedes comprar créditos adicionales en cualquier momento
+- ✅ **Donaciones**: Cualquier persona puede hacer una donación en XLM
+- ✅ **SPOT Exclusivo**: Los donantes reciben automáticamente un SPOT especial de "Donante"
+- ✅ **Sostenibilidad**: Las donaciones ayudan a mantener la plataforma gratuita para eventos pequeños
+- ✅ **Reconocimiento**: Los SPOTs de donante son únicos y coleccionables
 
-**Ejemplo práctico**:
-```
-📅 Inicio del mes: Compras Plan STARTER (1,000 NFTs)
-   ├─ Evento "Hackathon" (200 NFTs) → Créditos: 800
-   ├─ Evento "Workshop" (300 NFTs) → Créditos: 500
-   └─ Evento "Networking" (500 NFTs) → Créditos: 0
-   
-📅 Fin del mes: Créditos no usados expiran
-```
+**Cómo funciona**:
+1. El usuario hace una donación desde la plataforma
+2. El sistema genera automáticamente un SPOT exclusivo de "Donante"
+3. El SPOT se mintea directamente en la wallet del donante
+4. Las donaciones se utilizan para mantener la infraestructura y soportar eventos gratuitos
 
-### Flujo de Créditos y Planes
+### Flujo de Financiamiento
 
 ```mermaid
-stateDiagram-v2
-    [*] --> VerificarPlan
-    VerificarPlan --> PlanFree: Plan Free
-    VerificarPlan --> PlanStarter: Plan Starter
-    VerificarPlan --> PlanPro: Plan Pro
-    VerificarPlan --> PlanEnterprise: Plan Enterprise
-    
-    PlanFree --> CrearEvento: 1 evento/mes
-    PlanStarter --> CrearEvento: 5 eventos/mes
-    PlanPro --> CrearEvento: Ilimitado
-    PlanEnterprise --> CrearEvento: Ilimitado
-    
-    CrearEvento --> DescontarCreditos
-    DescontarCreditos --> VerificarCreditos
-    VerificarCreditos --> CreditosDisponibles: Créditos OK
-    VerificarCreditos --> SinCreditos: Sin créditos
-    
-    CreditosDisponibles --> ProcesarPago
-    SinCreditos --> SolicitarPago
-    
-    SolicitarPago --> ProcesarPago: Usuario paga
-    ProcesarPago --> DesplegarContrato
-    DesplegarContrato --> [*]
+graph TB
+    subgraph "Ingresos"
+        I1[Eventos >100 SPOTs]
+        I2[Eventos Empresariales]
+        I3[Donaciones]
+    end
+
+    subgraph "Uso de Ingresos"
+        U1[Mantenimiento de Infraestructura]
+        U2[Soporte a Eventos Gratuitos]
+        U3[Desarrollo y Mejoras]
+        U4[SPOTs Exclusivos para Donantes]
+    end
+
+    I1 --> U1
+    I2 --> U1
+    I3 --> U2
+    I1 --> U3
+    I2 --> U3
+    I3 --> U4
+
+    style I1 fill:#ff6b6b
+    style I2 fill:#ff6b6b
+    style I3 fill:#4ecdc4
+    style U2 fill:#95e1d3
+    style U4 fill:#95e1d3
 ```
+
+**Modelo Sostenible**:
+- Los eventos grandes y empresariales financian la plataforma
+- Las donaciones apoyan eventos gratuitos y desarrollo
+- Todos los usuarios se benefician de una plataforma robusta y gratuita para uso personal
 
 ---
 
@@ -548,25 +508,24 @@ stateDiagram-v2
 - **Build Tool**: Vite
 - **Wallet**: Freighter Wallet SDK
 - **Cliente Stellar**: `@stellar/stellar-sdk` y `soroban-client`
-- **Estado**: React Context API / Zustand
+- **Estado**: React Context API
 - **Data Fetching**: TanStack Query
-- **UI Components**: Material-UI o Chakra UI
+- **UI Components**: Stellar Design System
+- **Estilos**: Tailwind CSS
 
 ### Backend Layer
 
-- **Platform**: Firebase Functions (TypeScript/Node.js)
-- **Firebase Services**:
-  - **Firestore**: Metadatos de eventos, usuarios, créditos
-  - **Firebase Storage**: Imágenes de SPOTs
-  - **Firebase Auth**: Autenticación (opcional)
+- **Platform**: Express.js (Node.js/TypeScript)
+- **Storage**: Servicio de almacenamiento para imágenes
+- **Database**: Base de datos para metadatos de eventos
 - **Payment Processing**: Stellar Payments (XLM)
 
 ### DevOps
 
 - **CI/CD**: GitHub Actions
 - **Testing**: Vitest (frontend), Rust tests (contratos)
-- **Deployment**: Firebase Hosting (frontend), Firebase Functions (backend)
-- **Monitoring**: Firebase Analytics, Sentry (opcional)
+- **Deployment**: Servicios de hosting estándar
+- **Monitoring**: Analytics y logging
 
 ---
 
@@ -604,6 +563,18 @@ npm run dev
 ### Configuración de Entornos
 
 Edita `environments.toml` para configurar tus entornos (local, testnet, mainnet).
+
+---
+
+## 👥 Equipo
+
+SPOT es desarrollado por un equipo apasionado de desarrolladores:
+
+- **Santiago Mesa** - Desarrollo y Arquitectura
+- **Juliana Lugo** - Desarrollo y Diseño
+- **André Landinez** - Desarrollo y Smart Contracts
+- **Laura Lizeth Rico** - Desarrollo y Frontend
+- **Sebastian Verduguez** - Desarrollo y Backend
 
 ---
 
@@ -648,13 +619,13 @@ Edita `environments.toml` para configurar tus entornos (local, testnet, mainnet)
 - ✅ Aislamiento: Problemas en un evento no afectan otros
 - ✅ Actualización: Posibilidad de mejorar contratos nuevos sin afectar existentes
 
-### 4. Sistema de Créditos Mensuales
+### 4. Modelo Freemium Sostenible
 
-**¿Por qué créditos que expiran?**
+**¿Por qué eventos pequeños gratuitos?**
 
-- ✅ Flexibilidad: Usa los créditos en múltiples eventos
-- ✅ Transparencia: Planes claros y predecibles
-- ✅ Optimización: Incentiva uso eficiente de recursos
+- ✅ Accesibilidad: Cualquiera puede crear eventos personales
+- ✅ Adopción: Facilita la adopción masiva de la plataforma
+- ✅ Sostenibilidad: Eventos grandes financian la infraestructura
 
 ### 5. Múltiples Métodos de Distribución
 
@@ -673,7 +644,7 @@ Edita `environments.toml` para configurar tus entornos (local, testnet, mainnet)
 ```mermaid
 erDiagram
     USER ||--o{ EVENT : creates
-    USER ||--o{ CREDIT : owns
+    USER ||--o{ DONATION : makes
     EVENT ||--o{ COLLECTION : has
     COLLECTION ||--o{ SPOT : contains
     EVENT ||--o{ DELEGATE : has
@@ -687,11 +658,11 @@ erDiagram
         string plan_type
     }
     
-    CREDIT {
-        string user_id
-        int nft_credits
-        int wallet_delegates
-        timestamp expires_at
+    DONATION {
+        string id
+        string donor_address
+        int amount_xlm
+        string exclusive_spot_id
         timestamp created_at
     }
     
@@ -708,6 +679,7 @@ erDiagram
         int max_nfts
         int minted_nfts
         string image_url
+        bool is_paid
     }
     
     COLLECTION {
@@ -724,6 +696,7 @@ erDiagram
         string owner_address
         string metadata_uri
         timestamp minted_at
+        bool is_exclusive
     }
     
     DELEGATE {
@@ -769,14 +742,14 @@ graph TB
 
     subgraph "Validaciones Off-Chain"
         V6[Plan del usuario]
-        V7[Créditos disponibles]
+        V7[Validación de pago]
         V8[Geolocalización]
         V9[Códigos/QRs usados]
         V10[Rate limiting]
     end
 
     subgraph "Backend Security"
-        S1[Firebase Auth]
+        S1[Authentication]
         S2[JWT Tokens]
         S3[API Rate Limits]
         S4[IP Whitelisting]
@@ -823,8 +796,8 @@ graph TB
 
 ### Guía de Contribución
 
-- Lee nuestro [Código de Conducta](CODE_OF_CONDUCT.md)
-- Revisa nuestro [CONTRIBUTING.md](CONTRIBUTING.md)
+- Lee nuestro [Código de Conducta](blockotitos/CODE_OF_CONDUCT.md)
+- Revisa nuestro [CONTRIBUTING.md](blockotitos/CONTRIBUTING.md)
 - Asegúrate de que los tests pasen
 - Actualiza la documentación según sea necesario
 
@@ -832,7 +805,7 @@ graph TB
 
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia Apache-2.0. Ver el archivo [LICENSE](LICENSE) para más detalles.
+Este proyecto está bajo la Licencia Apache-2.0. Ver el archivo [LICENSE](blockotitos/LICENSE) para más detalles.
 
 ---
 
@@ -849,9 +822,9 @@ Este proyecto está bajo la Licencia Apache-2.0. Ver el archivo [LICENSE](LICENS
 
 Para preguntas, sugerencias o soporte:
 
-- 📧 Email: [tu-email@ejemplo.com]
-- 💬 Discord: [tu-servidor-discord]
-- 🐦 Twitter: [@tu-twitter]
+- 📧 Email: [contacto@spot.stellar]
+- 💬 Discord: [Servidor de SPOT]
+- 🐦 Twitter: [@SPOT_Stellar]
 
 ---
 
@@ -865,25 +838,4 @@ Para preguntas, sugerencias o soporte:
 
 ---
 
-## 📝 Notas Finales
-
-### Estado del Proyecto
-
-- ✅ **Paso 1 Completado**: Contratos Factory y Event implementados
-- 🚧 **En Desarrollo**: Backend y Frontend
-- 📅 **Próximos Pasos**: Ver [ROADMAP.md](docs/ROADMAP.md)
-
-### Roadmap
-
-Para ver el roadmap completo de desarrollo, consulta [docs/ROADMAP.md](docs/ROADMAP.md).
-
-### Documentación Adicional
-
-- [Arquitectura Completa](docs/ARCHITECTURE.md)
-- [Tech Stack Detallado](docs/TECH_STACK.md)
-- [Estructura del Proyecto](docs/PROJECT_STRUCTURE.md)
-
----
-
-**Última actualización**: Noviembre 2024
-
+**Última actualización**: Diciembre 2024
