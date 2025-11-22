@@ -19,25 +19,37 @@ El proyecto tiene dos partes principales:
 
 ### 1. Variables de Entorno
 
-Configura las siguientes variables de entorno en Vercel:
+Configura las siguientes variables de entorno en Vercel Dashboard → Settings → Environment Variables:
 
-#### Backend (API)
+#### Backend (API) - Variables Requeridas
 ```
+PORT=4000
 RPC_URL=https://soroban-testnet.stellar.org
 NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
-ADMIN_SECRET=tu_secret_key_aqui
-CLAIM_PAYER_SECRET=tu_secret_key_aqui
-SPOT_CONTRACT_ID=tu_contract_id_aqui
+ADMIN_SECRET=SBK5VSQDTBWV6DFIL4RQFQIEIKV4EIBPNPARZ5FGJP6VWQHUQI4RER7W
+CLAIM_PAYER_SECRET=SBK5VSQDTBWV6DFIL4RQFQIEIKV4EIBPNPARZ5FGJP6VWQHUQI4RER7W
+SPOT_CONTRACT_ID=CC3XATHZKTV7WGEBR337JAH3UTAMQTK7VPPSDSAKHA4KGVOCJPF6P3VF
 MOCK_MODE=false
-CORS_ORIGIN=*
-ASSET_BASE_URL=https://tu-dominio.vercel.app
+LOG_FILE=backend/logs/backend.log
 ```
 
-#### Frontend
+#### Backend (API) - Variables Opcionales
+```
+CORS_ORIGIN=*
+ASSET_BASE_URL=https://tu-dominio.vercel.app
+UPLOAD_MAX_BYTES=5242880
+```
+
+#### Frontend - Variables Requeridas
 ```
 VITE_BACKEND_URL=https://tu-dominio.vercel.app
-VITE_SPOT_CONTRACT_ID=tu_contract_id_aqui
+VITE_SPOT_CONTRACT_ID=CC3XATHZKTV7WGEBR337JAH3UTAMQTK7VPPSDSAKHA4KGVOCJPF6P3VF
 ```
+
+**⚠️ IMPORTANTE**: 
+- Reemplaza `https://tu-dominio.vercel.app` con tu URL real de Vercel después del primer despliegue
+- Las claves secretas (`ADMIN_SECRET`, `CLAIM_PAYER_SECRET`) deben ser las de producción, no las de ejemplo
+- `SPOT_CONTRACT_ID` debe ser el ID del contrato desplegado en la red que estés usando
 
 ### 2. Configuración de Vercel
 
@@ -67,10 +79,17 @@ El proyecto ya incluye `vercel.json` configurado. Asegúrate de que:
 3. **Variables de Entorno**:
    - Agrega todas las variables de entorno listadas arriba
    - Puedes hacerlo antes o después del primer deploy
+   - **Nota**: Después del primer deploy, actualiza `VITE_BACKEND_URL` y `ASSET_BASE_URL` con tu URL real
 
 4. **Desplegar**:
    - Click en "Deploy"
    - Espera a que termine el build
+
+5. **Actualizar Variables** (después del primer deploy):
+   - Ve a Settings → Environment Variables
+   - Actualiza `VITE_BACKEND_URL` con tu URL de Vercel (ej: `https://tu-proyecto.vercel.app`)
+   - Actualiza `ASSET_BASE_URL` con la misma URL
+   - Haz un nuevo deploy
 
 ### Opción 2: Despliegue desde CLI
 
@@ -87,7 +106,13 @@ vercel login
 # 4. Desplegar (primera vez)
 vercel
 
-# 5. Desplegar a producción
+# 5. Configurar variables de entorno
+vercel env add RPC_URL
+vercel env add NETWORK_PASSPHRASE
+vercel env add ADMIN_SECRET
+# ... (repetir para cada variable)
+
+# 6. Desplegar a producción
 vercel --prod
 ```
 
@@ -157,12 +182,17 @@ El backend expone los siguientes endpoints:
 ### Backend no responde
 - **Solución**: Verifica que las rutas en `api/index.js` estén correctamente exportadas
 
+### Variables de entorno no funcionan
+- **Solución**: Asegúrate de que las variables empiecen con `VITE_` para el frontend
+- Las variables del backend no necesitan prefijo
+
 ## 📝 Notas Importantes
 
 1. **Archivos Estáticos**: Los archivos en `public/` se sirven automáticamente
 2. **Build Time**: El build puede tardar varios minutos la primera vez
 3. **Cold Start**: Las Serverless Functions pueden tener un "cold start" de 1-2 segundos
 4. **Límites**: Plan Hobby tiene límites de tiempo de ejecución y ancho de banda
+5. **Secrets**: Nunca commitees las claves secretas al repositorio. Usa siempre variables de entorno.
 
 ## 🔗 Recursos
 
@@ -173,4 +203,3 @@ El backend expone los siguientes endpoints:
 ---
 
 **Última actualización**: Noviembre 2025
-
