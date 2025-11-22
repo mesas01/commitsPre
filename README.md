@@ -570,11 +570,60 @@ Edita `environments.toml` para configurar tus entornos (local, testnet, mainnet)
 
 SPOT es desarrollado por un equipo apasionado de desarrolladores:
 
-- **Santiago Mesa** - Desarrollo y Arquitectura
-- **Juliana Lugo** - Desarrollo y Diseño
-- **André Landinez** - Desarrollo y Smart Contracts
-- **Laura Lizeth Rico** - Desarrollo y Frontend
-- **Sebastian Verduguez** - Desarrollo y Backend
+<div align="center">
+
+### Santiago Mesa
+**Desarrollo y Smart Contracts / Backend**
+
+<img src="blockotitos/public/images/team/santiagoMesa.jpg" alt="Santiago Mesa" width="150" style="border-radius: 50%; margin: 10px;">
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/santiagomesan)
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=flat&logo=telegram&logoColor=white)](https://t.me/mesas01)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/mesas01)
+
+---
+
+### Juliana Lugo
+**Desarrollo y Diseño**
+
+<img src="blockotitos/public/images/team/JulianaLugo.jpg" alt="Juliana Lugo" width="150" style="border-radius: 50%; margin: 10px;">
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/julianalugo)
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=flat&logo=telegram&logoColor=white)](https://t.me/Julilugo09)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/Julilugo09)
+
+---
+
+### André Landinez
+**Desarrollo y Smart Contracts**
+
+<img src="blockotitos/public/images/team/andréLandinez.jpg" alt="André Landinez" width="150" style="border-radius: 50%; margin: 10px;">
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/andr%C3%A9-landinez-535298380/)
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=flat&logo=telegram&logoColor=white)](https://t.me/andrethth)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/andreMD287)
+
+---
+
+### Laura Lizeth Rico
+**Diseño y Edición**
+
+<img src="blockotitos/public/images/team/lauraLizeth.jpg" alt="Laura Lizeth Rico" width="150" style="border-radius: 50%; margin: 10px;">
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://co.linkedin.com/in/lizeth-rico)
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=flat&logo=telegram&logoColor=white)](https://t.me/lricoth)
+
+---
+
+### Sebastian Verduguez
+**Redes y Diseño**
+
+<img src="blockotitos/public/images/team/SebatianVerduguez.jpeg" alt="Sebastian Verduguez" width="150" style="border-radius: 50%; margin: 10px;">
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/sebastian-verduguez-luna-897024319)
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=flat&logo=telegram&logoColor=white)](https://t.me/sebasverduguez)
+
+</div>
 
 ---
 
@@ -803,28 +852,12 @@ graph TB
 
 ---
 
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia Apache-2.0. Ver el archivo [LICENSE](blockotitos/LICENSE) para más detalles.
-
----
-
 ## 🔗 Enlaces Útiles
 
 - [Documentación de Stellar](https://developers.stellar.org/)
 - [Documentación de Soroban](https://developers.stellar.org/docs/build/smart-contracts/)
 - [Freighter Wallet](https://freighter.app/)
 - [Scaffold Stellar](https://github.com/theahaco/scaffold-stellar)
-
----
-
-## 📞 Contacto
-
-Para preguntas, sugerencias o soporte:
-
-- 📧 Email: [contacto@spot.stellar]
-- 💬 Discord: [Servidor de SPOT]
-- 🐦 Twitter: [@SPOT_Stellar]
 
 ---
 
@@ -838,4 +871,4 @@ Para preguntas, sugerencias o soporte:
 
 ---
 
-**Última actualización**: Diciembre 2024
+**Última actualización**: Noviembre 2025
