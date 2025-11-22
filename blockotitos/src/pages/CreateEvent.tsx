@@ -6,6 +6,7 @@ import { useNotification } from "../hooks/useNotification";
 import { saveLocalEvent } from "../utils/localEvents";
 import { createEventRequest } from "../util/backend";
 import TldrCard from "../components/layout/TldrCard";
+import { buildErrorDetail, buildTxDetail } from "../utils/notificationHelpers";
 
 const CreateEvent: React.FC = () => {
   const { address } = useWallet();
@@ -36,7 +37,6 @@ const CreateEvent: React.FC = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [creatorSecret, setCreatorSecret] = useState("");
   const { showNotification } = useNotification();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -123,15 +123,6 @@ const CreateEvent: React.FC = () => {
       return;
     }
 
-    if (!creatorSecret.trim()) {
-      showNotification({
-        type: "warning",
-        title: "Secreto requerido",
-        message: "Ingresa tu clave secreta para firmar el evento en el backend",
-      });
-      return;
-    }
-
     try {
       // Procesar imagen si hay archivo
       let finalImageUrl = formData.imageUrl;
@@ -157,7 +148,6 @@ const CreateEvent: React.FC = () => {
       
       try {
         const backendPayload = {
-          creatorSecret: creatorSecret.trim(),
           creator: address!,
           eventName: formData.eventName,
           eventDate,
@@ -205,7 +195,11 @@ const CreateEvent: React.FC = () => {
         showNotification({
           type: "success",
           title: "Evento creado",
-          message: `Tu evento SPOT ha sido creado exitosamente. Tx: ${backendResponse.txHash}`,
+          message: "Tu evento SPOT está listo. Copia el detalle si necesitas reenviar la transacción.",
+          copyText: buildTxDetail(backendResponse.txHash, {
+            eventId: newEventId ?? newEvent.id,
+            creator: address,
+          }),
         });
         
         // Limpiar formulario
@@ -229,7 +223,6 @@ const CreateEvent: React.FC = () => {
           code: false,
           nfc: false,
         });
-        setCreatorSecret("");
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -242,8 +235,9 @@ const CreateEvent: React.FC = () => {
         console.error("Error al crear evento:", error);
         showNotification({
           type: "error",
-          title: "Error",
-          message: error?.message || "Error al crear evento. Por favor, intenta nuevamente.",
+          title: "Error al crear evento",
+          message: "No pudimos crear el evento. Copia el detalle para soporte.",
+          copyText: buildErrorDetail(error),
         });
       } finally {
         setIsSubmitting(false);
@@ -252,8 +246,9 @@ const CreateEvent: React.FC = () => {
       console.error("Error al crear evento:", error);
       showNotification({
         type: "error",
-        title: "Error",
-        message: error?.message || "Error al crear evento. Por favor, intenta nuevamente.",
+        title: "Error al crear evento",
+        message: "No pudimos crear el evento. Copia el detalle para soporte.",
+        copyText: buildErrorDetail(error),
       });
     }
   };
@@ -321,25 +316,6 @@ const CreateEvent: React.FC = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="creatorSecret" className="block text-sm font-medium text-stellar-black mb-2 font-body uppercase tracking-wide">
-                Clave secreta del organizador *
-              </label>
-              <Input
-                id="creatorSecret"
-                fieldSize="md"
-                name="creatorSecret"
-                type="password"
-                value={creatorSecret}
-                onChange={(e) => setCreatorSecret(e.target.value)}
-                placeholder="SXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                required
-                className="w-full"
-              />
-              <Text as="p" size="xs" className="text-stellar-black/60 mt-1 font-body">
-                Usada temporalmente para firmar la transacción en el backend. No se almacena en tu navegador.
-              </Text>
-            </div>
             {/* Event Name */}
             <div>
               <label htmlFor="eventName" className="block text-sm font-medium text-stellar-black mb-2 font-body uppercase tracking-wide">
