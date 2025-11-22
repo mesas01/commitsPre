@@ -285,25 +285,59 @@ const MyEvents: React.FC = () => {
     }
   };
 
-  const copyToClipboard = (text: string, type: 'link' | 'code', id: string) => {
-    if (!navigator?.clipboard) {
-      console.warn("Clipboard API no disponible en este navegador");
+  const copyTextWithFallback = async (text: string) => {
+    if (navigator?.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (error) {
+        console.warn("Clipboard API falló, usando fallback", error);
+      }
+    }
+
+    if (typeof document === "undefined") {
+      return false;
+    }
+
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.top = "-9999px";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    let successful = false;
+    try {
+      successful = document.execCommand("copy");
+    } catch (error) {
+      console.error("Fallback de portapapeles falló:", error);
+    } finally {
+      document.body.removeChild(textarea);
+    }
+    return successful;
+  };
+
+  const copyToClipboard = async (text: string, type: "link" | "code", id: string) => {
+    const success = await copyTextWithFallback(text);
+    if (!success) {
+      showNotification({
+        type: "error",
+        title: "No se pudo copiar",
+        message: "Copia manualmente el texto seleccionado.",
+      });
       return;
     }
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        if (type === 'link') {
-          setCopiedLink(id);
-          setTimeout(() => setCopiedLink(null), 2000);
-        } else {
-          setCopiedCode(id);
-          setTimeout(() => setCopiedCode(null), 2000);
-        }
-      })
-      .catch((error) =>
-        console.error("Error copiando al portapapeles:", error),
-      );
+
+    if (type === "link") {
+      setCopiedLink(id);
+      setTimeout(() => setCopiedLink(null), 2000);
+    } else {
+      setCopiedCode(id);
+      setTimeout(() => setCopiedCode(null), 2000);
+    }
   };
 
   const formatDate = (dateString: string) => {

@@ -8,6 +8,7 @@ import request from "supertest";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const LOG_FILE = path.join(__dirname, "..", "logs", "backend.test.log");
+const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
 
 process.env.NODE_ENV = "test";
 process.env.MOCK_MODE = process.env.MOCK_MODE || "true";
@@ -68,6 +69,7 @@ test("POST /events/create succeeds with valid payload (mock mode)", async () => 
   assert.match(response.body.txHash, /^MOCK-EVENT-/);
   assert.ok(response.body.signedEnvelope);
   assert.match(response.body.signedEnvelope, /^[A-Za-z0-9+/=]+$/);
+  assert.equal(response.body.imageUrl, validPayload.imageUrl);
 
   const entries = await readLogEntries();
   assert.equal(entries.length, 1);
@@ -82,10 +84,42 @@ test("POST /events/create validates missing fields", async () => {
   const response = await request(app).post("/events/create").send(partialPayload);
 
   assert.equal(response.statusCode, 400);
-  assert.deepEqual(response.body, { error: "All event fields are required" });
+  assert.deepEqual(response.body, {
+    error: "All event fields are required (image file or URL must be provided)",
+  });
 
   const entries = await readLogEntries();
   assert.equal(entries.length, 0);
+});
+
+test("POST /events/create accepts multipart upload and stores image", async () => {
+  const response = await request(app)
+    .post("/events/create")
+    .field("creator", validPayload.creator)
+    .field("eventName", validPayload.eventName)
+    .field("eventDate", String(validPayload.eventDate))
+    .field("location", validPayload.location)
+    .field("description", validPayload.description)
+    .field("maxPoaps", String(validPayload.maxPoaps))
+    .field("claimStart", String(validPayload.claimStart))
+    .field("claimEnd", String(validPayload.claimEnd))
+    .field("metadataUri", validPayload.metadataUri)
+    .attach("image", Buffer.from("fake-image"), "poster.png");
+
+  assert.equal(response.statusCode, 200);
+  assert.ok(response.body.imageUrl);
+  assert.match(response.body.imageUrl, /\/uploads\//);
+
+  const uploadedUrl = new URL(response.body.imageUrl);
+  const filename = uploadedUrl.pathname.split("/").pop();
+  assert.ok(filename);
+  const storedFilePath = path.join(UPLOADS_DIR, filename);
+  const fileExists = await fs
+    .access(storedFilePath)
+    .then(() => true)
+    .catch(() => false);
+  assert.equal(fileExists, true);
+  await fs.rm(storedFilePath, { force: true });
 });
 
 test("POST /events/create rejects invalid JSON", async () => {

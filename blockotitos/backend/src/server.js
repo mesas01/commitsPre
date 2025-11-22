@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
+import multer from "multer";
 import {
   approveCreator,
   revokeCreatorApproval,
@@ -39,6 +40,71 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const LOG_PATH = LOG_FILE || path.resolve(__dirname, "../logs/backend.log");
 fs.mkdirSync(path.dirname(LOG_PATH), { recursive: true });
+const uploadsDir = path.resolve(__dirname, "../uploads");
+fs.mkdirSync(uploadsDir, { recursive: true });
+const uploadSizeLimit = Number(process.env.UPLOAD_MAX_BYTES || 5 * 1024 * 1024);
+
+function sanitizeFilename(filename) {
+  return filename
+    .replace(/\s+/g, "-")
+    .replace(/[^a-zA-Z0-9-.]/g, "")
+    .toLowerCase();
+}
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || "";
+    const base = path.basename(file.originalname, ext) || "image";
+    const safeBase = sanitizeFilename(base) || "image";
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    cb(null, `${uniqueSuffix}-${safeBase}${ext.toLowerCase()}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: uploadSizeLimit },
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE", "image"));
+    } else {
+      cb(null, true);
+    }
+  },
+});
+
+function resolveAssetBaseUrl(req) {
+  if (process.env.ASSET_BASE_URL) {
+    return process.env.ASSET_BASE_URL.replace(/\/$/, "");
+  }
+  const host = req.get("host") || "localhost";
+  const protocol = req.protocol || "http";
+  return `${protocol}://${host}`;
+}
+
+function buildImageUrl(req, file) {
+  if (!file) {
+    return "";
+  }
+  const base = resolveAssetBaseUrl(req);
+  return `${base}/uploads/${file.filename}`;
+}
+
+async function cleanupUploadedFile(file) {
+  if (!file?.path) {
+    return;
+  }
+  try {
+    await fs.promises.unlink(file.path);
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      console.warn("Failed to remove uploaded file", file.path, error.message);
+    }
+  }
+}
 
 async function logTx(entry) {
   const timestamp = new Date().toISOString();
@@ -87,8 +153,16 @@ app.use(
     origin: process.env.CORS_ORIGIN || "*",
   }),
 );
+app.use("/uploads", express.static(uploadsDir));
 
 app.use((err, _req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({ error: "Image upload exceeded size limit" });
+    }
+    console.error("Multer error", err.message);
+    return res.status(400).json({ error: `Image upload failed: ${err.message}` });
+  }
   if (err instanceof SyntaxError && "body" in err) {
     console.error("Invalid JSON payload", err.message);
     return res.status(400).json({ error: "Invalid JSON payload" });
@@ -207,7 +281,7 @@ app.post("/creators/revoke", async (req, res) => {
   }
 });
 
-app.post("/events/create", async (req, res) => {
+app.post("/events/create", upload.single("image"), async (req, res) => {
   const {
     creator,
     eventName,
@@ -218,7 +292,7 @@ app.post("/events/create", async (req, res) => {
     claimStart,
     claimEnd,
     metadataUri,
-    imageUrl,
+    imageUrl: imageUrlField,
   } = req.body || {};
 
   const numericFields = {
@@ -238,8 +312,18 @@ app.post("/events/create", async (req, res) => {
     claimStart: numericFields.claimStart,
     claimEnd: numericFields.claimEnd,
     metadataUri,
-    imageUrl,
+    imageUrl: undefined,
     operator: isMock ? "mock-admin" : ADMIN_PUBLIC_KEY,
+  };
+
+  let finalImageUrl = (imageUrlField || "").toString().trim();
+  if (req.file) {
+    finalImageUrl = buildImageUrl(req, req.file);
+  }
+
+  const cleanupAndRespond = async (status, payload) => {
+    await cleanupUploadedFile(req.file);
+    res.status(status).json(payload);
   };
 
   if (
@@ -252,10 +336,14 @@ app.post("/events/create", async (req, res) => {
     Number.isNaN(numericFields.claimStart) ||
     Number.isNaN(numericFields.claimEnd) ||
     !metadataUri ||
-    !imageUrl
+    !finalImageUrl
   ) {
-    return res.status(400).json({ error: "All event fields are required" });
+    return cleanupAndRespond(400, {
+      error: "All event fields are required (image file or URL must be provided)",
+    });
   }
+
+  payload.imageUrl = finalImageUrl;
 
   if (isMock) {
     const txHash = `MOCK-EVENT-${Date.now()}`;
@@ -267,11 +355,17 @@ app.post("/events/create", async (req, res) => {
       payload,
       signedEnvelope,
     });
-    return res.json({ txHash, signedEnvelope, rpcResponse: { status: "MOCK" } });
+    return res.json({
+      txHash,
+      signedEnvelope,
+      rpcResponse: { status: "MOCK" },
+      imageUrl: finalImageUrl,
+    });
   }
 
   try {
     if (!ADMIN_SECRET || !ADMIN_PUBLIC_KEY) {
+      await cleanupUploadedFile(req.file);
       return res.status(500).json({ error: "Admin credentials not configured" });
     }
 
@@ -289,7 +383,7 @@ app.post("/events/create", async (req, res) => {
       claimStart: numericFields.claimStart,
       claimEnd: numericFields.claimEnd,
       metadataUri,
-      imageUrl,
+      imageUrl: finalImageUrl,
     });
     let eventId;
     try {
@@ -315,8 +409,10 @@ app.post("/events/create", async (req, res) => {
       rpcResponse: result.rpcResponse,
       signedEnvelope: result.envelopeXdr,
       eventId,
+      imageUrl: finalImageUrl,
     });
   } catch (error) {
+    await cleanupUploadedFile(req.file);
     await logTx({
       action: "create_event",
       status: "error",

@@ -29,6 +29,8 @@ Variables necesarias (`.env`):
 | `SPOT_CONTRACT_ID` | ID del contrato desplegado |
 | `MOCK_MODE` | Si es `true`, no se hace ninguna llamada a Soroban y se devuelven hashes simulados |
 | `LOG_FILE` | (Opcional) Ruta del archivo de logs. Default: `backend/logs/backend.log` |
+| `ASSET_BASE_URL` | (Opcional) URL base para exponer `/uploads`. Por defecto se usa `http(s)://<host>` de cada request. |
+| `UPLOAD_MAX_BYTES` | (Opcional) Límite en bytes por imagen (default `5MB`). |
 
 > Para hacer pruebas sin contrato desplegado, establece `MOCK_MODE=true` en tu `.env`.
 > En este modo puedes usar cualquier valor para las demás variables y el backend
@@ -122,6 +124,8 @@ curl -X POST http://localhost:4000/creators/revoke \
 
 ### Crear evento (firma el backend con ADMIN_SECRET)
 
+Puedes seguir enviando JSON si ya cuentas con una URL de imagen accesible públicamente:
+
 ```bash
 curl -X POST http://localhost:4000/events/create \
   -H "Content-Type: application/json" \
@@ -138,6 +142,25 @@ curl -X POST http://localhost:4000/events/create \
     "imageUrl": "https://example.com/image.png"
   }'
 ```
+
+Si necesitas que el backend aloje la imagen de forma local, envía `multipart/form-data` con el campo `image`:
+
+```bash
+curl -X POST http://localhost:4000/events/create \
+  -F "creator=GCF...CREATOR" \
+  -F "eventName=Hackathon" \
+  -F "eventDate=1735689600" \
+  -F "location=Bogotá" \
+  -F "description=SPOT Demo" \
+  -F "maxPoaps=100" \
+  -F "claimStart=1735689600" \
+  -F "claimEnd=1736294400" \
+  -F "metadataUri=https://example.com/metadata.json" \
+  -F "image=@./poster.png"
+```
+
+Cada archivo se guarda en `backend/uploads` y queda accesible en `http://localhost:4000/uploads/<nombre>`.  
+Si despliegas detrás de un proxy/CDN, define `ASSET_BASE_URL` para forzar el host público utilizado en la URL devuelta.
 
 ### Consultar admin
 

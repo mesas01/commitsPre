@@ -94,6 +94,8 @@ const CreateEvent: React.FC = () => {
     }));
   };
 
+  const placeholderImage = "https://via.placeholder.com/300";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -124,17 +126,6 @@ const CreateEvent: React.FC = () => {
     }
 
     try {
-      // Procesar imagen si hay archivo
-      let finalImageUrl = formData.imageUrl;
-      if (formData.imageFile) {
-        // En producción, aquí subirías la imagen a IPFS, Firebase Storage, etc.
-        // Por ahora, usamos el preview como base64 temporalmente
-        // TODO: Subir a almacenamiento permanente y obtener URL
-        finalImageUrl = formData.imagePreview || formData.imageUrl || "https://via.placeholder.com/300";
-      } else if (!formData.imageUrl) {
-        finalImageUrl = "https://via.placeholder.com/300";
-      }
-
       // Convertir fechas a timestamps Unix (segundos)
       const eventDate = Math.floor(new Date(formData.eventDate).getTime() / 1000);
       const claimStart = Math.floor(new Date(formData.claimStart).getTime() / 1000);
@@ -142,6 +133,11 @@ const CreateEvent: React.FC = () => {
 
       // Metadata URI - por ahora usar un placeholder
       const metadataUri = formData.metadataUri || `https://spot.example.com/metadata/${Date.now()}`;
+
+      const imageUrlForRequest = formData.imageFile ? undefined : (formData.imageUrl || placeholderImage);
+      const localPreviewFallback = formData.imageFile
+        ? formData.imagePreview || placeholderImage
+        : imageUrlForRequest || placeholderImage;
 
       // Guardar evento localmente (temporal hasta que el contrato esté configurado)
       setIsSubmitting(true);
@@ -157,7 +153,8 @@ const CreateEvent: React.FC = () => {
           claimStart,
           claimEnd,
           metadataUri,
-          imageUrl: finalImageUrl,
+          imageUrl: imageUrlForRequest,
+          imageFile: formData.imageFile ?? undefined,
         };
 
         const backendResponse = await createEventRequest(backendPayload);
@@ -168,6 +165,8 @@ const CreateEvent: React.FC = () => {
           );
         }
 
+        const resolvedImageUrl = backendResponse.imageUrl || localPreviewFallback || placeholderImage;
+
         const newEvent = saveLocalEvent(
           {
             name: formData.eventName,
@@ -177,7 +176,7 @@ const CreateEvent: React.FC = () => {
             maxSpots: parseInt(formData.maxSpots),
             claimStart: formData.claimStart,
             claimEnd: formData.claimEnd,
-            imageUrl: finalImageUrl,
+            imageUrl: resolvedImageUrl,
             metadataUri,
             creator: address!,
             distributionMethods,

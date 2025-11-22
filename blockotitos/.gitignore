@@ -24,10 +24,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# environment variables
-.env
-.env.*
-!.env.example
+# local asset uploads
+backend/uploads
+
+
 
 # easy way to create temporary local-only files and folders
 *.local.*

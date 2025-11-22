@@ -6,12 +6,16 @@ const defaultHeaders = {
 };
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const body = options.body;
+  const isFormData =
+    typeof FormData !== "undefined" && body instanceof FormData;
+  const headers = {
+    ...(isFormData ? {} : defaultHeaders),
+    ...(options.headers || {}),
+  };
   const response = await fetch(`${backendBaseUrl}${path}`, {
-    headers: {
-      ...defaultHeaders,
-      ...(options.headers || {}),
-    },
     ...options,
+    headers,
   });
 
   if (!response.ok) {
@@ -33,7 +37,8 @@ export interface CreateEventPayload {
   claimStart: number;
   claimEnd: number;
   metadataUri: string;
-  imageUrl: string;
+  imageUrl?: string;
+  imageFile?: File | null;
 }
 
 export interface ClaimEventPayload {
@@ -50,12 +55,29 @@ export interface BackendTxResponse {
 
 export interface CreateEventResponse extends BackendTxResponse {
   eventId?: number;
+  imageUrl?: string;
 }
 
 export function createEventRequest(payload: CreateEventPayload) {
+  const formData = new FormData();
+  formData.append("creator", payload.creator);
+  formData.append("eventName", payload.eventName);
+  formData.append("eventDate", payload.eventDate.toString());
+  formData.append("location", payload.location);
+  formData.append("description", payload.description);
+  formData.append("maxPoaps", payload.maxPoaps.toString());
+  formData.append("claimStart", payload.claimStart.toString());
+  formData.append("claimEnd", payload.claimEnd.toString());
+  formData.append("metadataUri", payload.metadataUri);
+  if (typeof payload.imageUrl === "string") {
+    formData.append("imageUrl", payload.imageUrl);
+  }
+  if (payload.imageFile) {
+    formData.append("image", payload.imageFile);
+  }
   return request<CreateEventResponse>("/events/create", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: formData,
   });
 }
 
