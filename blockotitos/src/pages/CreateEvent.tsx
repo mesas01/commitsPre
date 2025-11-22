@@ -6,6 +6,7 @@ import { useNotification } from "../hooks/useNotification";
 import { saveLocalEvent } from "../utils/localEvents";
 import { createEventRequest } from "../util/backend";
 import TldrCard from "../components/layout/TldrCard";
+import { buildErrorDetail, buildTxDetail } from "../utils/notificationHelpers";
 
 const CreateEvent: React.FC = () => {
   const { address } = useWallet();
@@ -205,7 +206,11 @@ const CreateEvent: React.FC = () => {
         showNotification({
           type: "success",
           title: "Evento creado",
-          message: `Tu evento SPOT ha sido creado exitosamente. Tx: ${backendResponse.txHash}`,
+          message: "Tu evento SPOT está listo. Copia el detalle si necesitas reenviar la transacción.",
+          copyText: buildTxDetail(backendResponse.txHash, {
+            eventId: newEventId ?? newEvent.id,
+            creator: address,
+          }),
         });
         
         // Limpiar formulario
@@ -242,8 +247,9 @@ const CreateEvent: React.FC = () => {
         console.error("Error al crear evento:", error);
         showNotification({
           type: "error",
-          title: "Error",
-          message: error?.message || "Error al crear evento. Por favor, intenta nuevamente.",
+          title: "Error al crear evento",
+          message: "No pudimos crear el evento. Copia el detalle para soporte.",
+          copyText: buildErrorDetail(error),
         });
       } finally {
         setIsSubmitting(false);
@@ -252,8 +258,9 @@ const CreateEvent: React.FC = () => {
       console.error("Error al crear evento:", error);
       showNotification({
         type: "error",
-        title: "Error",
-        message: error?.message || "Error al crear evento. Por favor, intenta nuevamente.",
+        title: "Error al crear evento",
+        message: "No pudimos crear el evento. Copia el detalle para soporte.",
+        copyText: buildErrorDetail(error),
       });
     }
   };

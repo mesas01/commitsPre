@@ -9,6 +9,7 @@ import {
   mapEventToClaimedSpot,
   upsertClaimedSpot,
 } from "../utils/claimedSpots";
+import { buildErrorDetail, buildTxDetail } from "../utils/notificationHelpers";
 
 const Mint: React.FC = () => {
   const { address } = useWallet();
@@ -96,7 +97,8 @@ const Mint: React.FC = () => {
       showNotification({
         type: "success",
         title: "Reclamo enviado",
-        message: `Tx enviada: ${response.txHash}`,
+        message: "Tx enviada. Copia el detalle si necesitas compartirla.",
+        copyText: buildTxDetail(response.txHash, { eventId, claimer: address }),
       });
       await persistClaimedSpotLocally(eventId);
       navigate("/");
@@ -105,7 +107,8 @@ const Mint: React.FC = () => {
       showNotification({
         type: "error",
         title: "Error al reclamar",
-        message: error?.message || "No se pudo completar la solicitud",
+        message: "No se pudo completar el reclamo. Copia el detalle para soporte.",
+        copyText: buildErrorDetail(error),
       });
     } finally {
       setIsProcessing(false);
@@ -144,7 +147,8 @@ const Mint: React.FC = () => {
       showNotification({
         type: "error",
         title: "Error al reclamar",
-        message: error instanceof Error ? error.message : "Intenta nuevamente",
+        message: "No pudimos procesar el link. Copia el detalle para soporte.",
+        copyText: buildErrorDetail(error),
       });
     } finally {
       setIsProcessing(false);
@@ -174,7 +178,8 @@ const Mint: React.FC = () => {
       showNotification({
         type: "error",
         title: "Error al reclamar",
-        message: error instanceof Error ? error.message : "Intenta nuevamente",
+        message: "No pudimos procesar el código. Copia el detalle para soporte.",
+        copyText: buildErrorDetail(error),
       });
     } finally {
       setIsProcessing(false);
@@ -208,7 +213,8 @@ const Mint: React.FC = () => {
           showNotification({
             type: "error",
             title: "Error de ubicación",
-            message: "No pudimos obtener tu posición",
+            message: "No pudimos obtener tu posición. Copia el detalle para soporte.",
+            copyText: buildErrorDetail(error),
           });
         }
       );
@@ -218,6 +224,7 @@ const Mint: React.FC = () => {
         type: "error",
         title: "Error al reclamar",
         message: "No pudimos completar la validación por geolocalización.",
+        copyText: buildErrorDetail(error),
       });
     } finally {
       setIsProcessing(false);
