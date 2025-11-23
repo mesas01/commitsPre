@@ -74,6 +74,7 @@ const Profile: React.FC = () => {
               </div>
               <div className="col-span-full xl:col-span-24 xl:row-start-2 xl:flex xl:justify-center">
                 <TldrCard
+                  label=""
                   className="xl:mx-auto"
                   summary="Aquí ves tu wallet Stellar conectada, balances y accesos rápidos para crear eventos o reclamar tus comprobantes."
                   bullets={[

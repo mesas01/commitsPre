@@ -285,6 +285,7 @@ const Mint: React.FC = () => {
               </div>
               <div className="col-span-full xl:col-span-24 xl:row-start-2 xl:flex xl:justify-center">
                 <TldrCard
+                  label=""
                   className="xl:mx-auto"
                   summary="Decide cómo reclamar tu comprobante: QR, link, código, geolocalización o NFC según el contexto del evento."
                   bullets={[
