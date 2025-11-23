@@ -20,17 +20,18 @@ import {
   getUserPoapTokenId,
 } from "./soroban.js";
 
-dotenv.config({ path: process.env.ENV_PATH || undefined });
+// Cargar variables de entorno
+dotenv.config();
 
+// Definición de variables globales
 const {
-  PORT = 4000,
+  PORT = 8080, // Google Cloud Run usa el puerto 8080 por defecto
   RPC_URL,
   NETWORK_PASSPHRASE,
   ADMIN_SECRET,
   CLAIM_PAYER_SECRET,
   SPOT_CONTRACT_ID,
   MOCK_MODE = "false",
-  LOG_FILE,
 } = process.env;
 
 const isTestEnv = process.env.NODE_ENV === "test";
@@ -38,12 +39,28 @@ const isMock = MOCK_MODE.toLowerCase() === "true";
 const CONTRACT_ID = SPOT_CONTRACT_ID;
 const CLAIM_SIGNER_SECRET = CLAIM_PAYER_SECRET || ADMIN_SECRET;
 let ADMIN_PUBLIC_KEY;
+
+// Configuración de rutas para ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const LOG_PATH = LOG_FILE || path.resolve(__dirname, "../logs/backend.log");
-fs.mkdirSync(path.dirname(LOG_PATH), { recursive: true });
-const uploadsDir = path.resolve(__dirname, "../uploads");
-fs.mkdirSync(uploadsDir, { recursive: true });
+
+// --- LÓGICA DE ALMACENAMIENTO HÍBRIDA (CLOUD vs LOCAL) ---
+// En Cloud Run (K_SERVICE existe), usamos /tmp porque el disco es de solo lectura.
+// En Local, usamos la carpeta ../uploads de siempre.
+const isCloud = process.env.K_SERVICE || false;
+const uploadsDir = isCloud 
+  ? path.join('/tmp', 'uploads') 
+  : path.resolve(__dirname, "../uploads");
+
+// Crear carpeta de uploads si no existe (con manejo de errores seguro)
+try {
+  if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (e) {
+  console.warn("Advertencia: No se pudo crear directorio de uploads", e);
+}
+
 const uploadSizeLimit = Number(process.env.UPLOAD_MAX_BYTES || 5 * 1024 * 1024);
 
 function sanitizeFilename(filename) {
@@ -53,6 +70,7 @@ function sanitizeFilename(filename) {
     .toLowerCase();
 }
 
+// Configuración de Multer
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     cb(null, uploadsDir);
@@ -108,55 +126,64 @@ async function cleanupUploadedFile(file) {
   }
 }
 
+// --- LOGGING SEGURO PARA CLOUD ---
+// Solo usamos console.log. Google Cloud captura esto automáticamente.
+// Hemos eliminado fs.appendFile porque causa errores en la nube.
 async function logTx(entry) {
   const timestamp = new Date().toISOString();
-  const record = { timestamp, ...entry };
-  const line = JSON.stringify(record) + "\n";
-  try {
-    await fs.promises.appendFile(LOG_PATH, line);
-  } catch (err) {
-    console.error("Failed to write log file", err);
-  }
-
   const prefix = `[${timestamp}] ${entry.action}`;
+  
   if (entry.status === "success") {
     console.log(`${prefix} success${entry.txHash ? ` tx=${entry.txHash}` : ""}`);
+    if(entry.payload) {
+        // Imprimir payload de forma segura
+        try {
+            console.log(JSON.stringify(entry.payload));
+        } catch (e) { /* ignorar error de circular json */ }
+    }
   } else {
     console.error(`${prefix} error: ${entry.error}`);
   }
 }
 
+// Validación de credenciales
 if (!isMock) {
   if (!RPC_URL || !NETWORK_PASSPHRASE || !ADMIN_SECRET || !CONTRACT_ID) {
-    throw new Error(
-      "Missing env vars. Please copy backend/env.example → backend/.env and fill values."
-    );
+    console.error("ADVERTENCIA CRÍTICA: Faltan variables de entorno. El servidor podría fallar.");
   }
 
   try {
-    ADMIN_PUBLIC_KEY = Keypair.fromSecret(ADMIN_SECRET).publicKey();
+    if (ADMIN_SECRET) {
+        ADMIN_PUBLIC_KEY = Keypair.fromSecret(ADMIN_SECRET).publicKey();
+    }
   } catch (error) {
-    throw new Error(`Invalid ADMIN_SECRET provided: ${error.message}`);
+    console.error(`Invalid ADMIN_SECRET provided: ${error.message}`);
   }
 
   try {
-    Keypair.fromSecret(CLAIM_SIGNER_SECRET);
+    if (CLAIM_SIGNER_SECRET) {
+        Keypair.fromSecret(CLAIM_SIGNER_SECRET);
+    }
   } catch (error) {
-    throw new Error(`Invalid CLAIM_PAYER_SECRET provided: ${error.message}`);
+    console.error(`Invalid CLAIM_PAYER_SECRET provided: ${error.message}`);
   }
 } else {
   console.warn("[MOCK_MODE] Running backend without hitting Soroban RPC.");
 }
 
 const app = express();
+
 app.use(express.json());
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "*",
   }),
 );
+
+// Servir estáticos (temporal en Cloud Run)
 app.use("/uploads", express.static(uploadsDir));
 
+// Manejo de errores de Multer y JSON
 app.use((err, _req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
@@ -172,29 +199,29 @@ app.use((err, _req, res, next) => {
   next(err);
 });
 
+// Ruta raíz para health check visual
+app.get("/", (_req, res) => {
+  res.send("Backend SPOT Activo 🚀");
+});
+
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
+// --- ENDPOINTS ---
+
 app.post("/creators/approve", async (req, res) => {
   const { creator, paymentReference } = req.body || {};
   const payload = { creator, paymentReference };
+  
   if (!creator || !paymentReference) {
-    return res
-      .status(400)
-      .json({ error: "creator and paymentReference are required" });
+    return res.status(400).json({ error: "creator and paymentReference are required" });
   }
 
   if (isMock) {
     const txHash = `MOCK-APPROVE-${Date.now()}`;
     const signedEnvelope = Buffer.from(`MOCK-APPROVE-ENVELOPE-${Date.now()}`).toString("base64");
-    await logTx({
-      action: "approve_creator",
-      status: "success",
-      txHash,
-      payload,
-      signedEnvelope,
-    });
+    await logTx({ action: "approve_creator", status: "success", txHash, payload, signedEnvelope });
     return res.json({ txHash, signedEnvelope, rpcResponse: { status: "MOCK" } });
   }
 
@@ -207,26 +234,10 @@ app.post("/creators/approve", async (req, res) => {
       adminSecret: ADMIN_SECRET,
       contractId: CONTRACT_ID,
     });
-    await logTx({
-      action: "approve_creator",
-      status: "success",
-      txHash: result.txHash,
-      payload,
-      rpcResponse: result.rpcResponse,
-      signedEnvelope: result.envelopeXdr,
-    });
-    res.json({
-      txHash: result.txHash,
-      rpcResponse: result.rpcResponse,
-      signedEnvelope: result.envelopeXdr,
-    });
+    await logTx({ action: "approve_creator", status: "success", txHash: result.txHash, payload, rpcResponse: result.rpcResponse, signedEnvelope: result.envelopeXdr });
+    res.json({ txHash: result.txHash, rpcResponse: result.rpcResponse, signedEnvelope: result.envelopeXdr });
   } catch (error) {
-    await logTx({
-      action: "approve_creator",
-      status: "error",
-      error: error.message || String(error),
-      payload,
-    });
+    await logTx({ action: "approve_creator", status: "error", error: error.message || String(error), payload });
     res.status(500).json({ error: error.message || String(error) });
   }
 });
@@ -241,13 +252,7 @@ app.post("/creators/revoke", async (req, res) => {
   if (isMock) {
     const txHash = `MOCK-REVOKE-${Date.now()}`;
     const signedEnvelope = Buffer.from(`MOCK-REVOKE-ENVELOPE-${Date.now()}`).toString("base64");
-    await logTx({
-      action: "revoke_creator",
-      status: "success",
-      txHash,
-      payload,
-      signedEnvelope,
-    });
+    await logTx({ action: "revoke_creator", status: "success", txHash, payload, signedEnvelope });
     return res.json({ txHash, signedEnvelope, rpcResponse: { status: "MOCK" } });
   }
 
@@ -259,26 +264,10 @@ app.post("/creators/revoke", async (req, res) => {
       adminSecret: ADMIN_SECRET,
       contractId: CONTRACT_ID,
     });
-    await logTx({
-      action: "revoke_creator",
-      status: "success",
-      txHash: result.txHash,
-      payload,
-      rpcResponse: result.rpcResponse,
-      signedEnvelope: result.envelopeXdr,
-    });
-    res.json({
-      txHash: result.txHash,
-      rpcResponse: result.rpcResponse,
-      signedEnvelope: result.envelopeXdr,
-    });
+    await logTx({ action: "revoke_creator", status: "success", txHash: result.txHash, payload, rpcResponse: result.rpcResponse, signedEnvelope: result.envelopeXdr });
+    res.json({ txHash: result.txHash, rpcResponse: result.rpcResponse, signedEnvelope: result.envelopeXdr });
   } catch (error) {
-    await logTx({
-      action: "revoke_creator",
-      status: "error",
-      error: error.message || String(error),
-      payload,
-    });
+    await logTx({ action: "revoke_creator", status: "error", error: error.message || String(error), payload });
     res.status(500).json({ error: error.message || String(error) });
   }
 });
@@ -340,9 +329,7 @@ app.post("/events/create", upload.single("image"), async (req, res) => {
     !metadataUri ||
     !finalImageUrl
   ) {
-    return cleanupAndRespond(400, {
-      error: "All event fields are required (image file or URL must be provided)",
-    });
+    return cleanupAndRespond(400, { error: "All event fields are required (image file or URL must be provided)" });
   }
 
   payload.imageUrl = finalImageUrl;
@@ -350,19 +337,8 @@ app.post("/events/create", upload.single("image"), async (req, res) => {
   if (isMock) {
     const txHash = `MOCK-EVENT-${Date.now()}`;
     const signedEnvelope = Buffer.from(`MOCK-EVENT-ENVELOPE-${Date.now()}`).toString("base64");
-    await logTx({
-      action: "create_event",
-      status: "success",
-      txHash,
-      payload,
-      signedEnvelope,
-    });
-    return res.json({
-      txHash,
-      signedEnvelope,
-      rpcResponse: { status: "MOCK" },
-      imageUrl: finalImageUrl,
-    });
+    await logTx({ action: "create_event", status: "success", txHash, payload, signedEnvelope });
+    return res.json({ txHash, signedEnvelope, rpcResponse: { status: "MOCK" }, imageUrl: finalImageUrl });
   }
 
   try {
@@ -387,6 +363,7 @@ app.post("/events/create", upload.single("image"), async (req, res) => {
       metadataUri,
       imageUrl: finalImageUrl,
     });
+    
     let eventId;
     try {
       eventId = await getEventCount({
@@ -398,47 +375,24 @@ app.post("/events/create", upload.single("image"), async (req, res) => {
     } catch (countError) {
       console.warn("Unable to fetch event count after creation:", countError);
     }
-    await logTx({
-      action: "create_event",
-      status: "success",
-      txHash: result.txHash,
-      payload: { ...payload, eventId },
-      rpcResponse: result.rpcResponse,
-      signedEnvelope: result.envelopeXdr,
-    });
-    res.json({
-      txHash: result.txHash,
-      rpcResponse: result.rpcResponse,
-      signedEnvelope: result.envelopeXdr,
-      eventId,
-      imageUrl: finalImageUrl,
-    });
+    
+    await logTx({ action: "create_event", status: "success", txHash: result.txHash, payload: { ...payload, eventId }, rpcResponse: result.rpcResponse, signedEnvelope: result.envelopeXdr });
+    res.json({ txHash: result.txHash, rpcResponse: result.rpcResponse, signedEnvelope: result.envelopeXdr, eventId, imageUrl: finalImageUrl });
   } catch (error) {
     await cleanupUploadedFile(req.file);
-    await logTx({
-      action: "create_event",
-      status: "error",
-      error: error.message || String(error),
-      payload,
-    });
+    await logTx({ action: "create_event", status: "error", error: error.message || String(error), payload });
     res.status(500).json({ error: error.message || String(error) });
   }
 });
 
 app.get("/events/:eventId/minted-count", async (req, res) => {
   const eventId = Number(req.params.eventId);
-
   if (Number.isNaN(eventId)) {
     return res.status(400).json({ error: "Invalid eventId" });
   }
 
-  if (isMock) {
-    return res.json({ mintedCount: 0 });
-  }
-
-  if (!ADMIN_SECRET) {
-    return res.status(500).json({ error: "Admin credentials not configured" });
-  }
+  if (isMock) return res.json({ mintedCount: 0 });
+  if (!ADMIN_SECRET) return res.status(500).json({ error: "Admin credentials not configured" });
 
   try {
     const mintedCount = await getMintedCount({
@@ -468,13 +422,7 @@ app.post("/events/claim", async (req, res) => {
   if (isMock) {
     const txHash = `MOCK-CLAIM-${Date.now()}`;
     const signedEnvelope = Buffer.from(`MOCK-CLAIM-ENVELOPE-${Date.now()}`).toString("base64");
-    await logTx({
-      action: "claim_poap",
-      status: "success",
-      txHash,
-      payload,
-      signedEnvelope,
-    });
+    await logTx({ action: "claim_poap", status: "success", txHash, payload, signedEnvelope });
     return res.json({ txHash, signedEnvelope, rpcResponse: { status: "MOCK" } });
   }
 
@@ -491,34 +439,16 @@ app.post("/events/claim", async (req, res) => {
       claimer,
       eventId: numericEventId,
     });
-    await logTx({
-      action: "claim_poap",
-      status: "success",
-      txHash: result.txHash,
-      payload,
-      rpcResponse: result.rpcResponse,
-      signedEnvelope: result.envelopeXdr,
-    });
-    res.json({
-      txHash: result.txHash,
-      rpcResponse: result.rpcResponse,
-      signedEnvelope: result.envelopeXdr,
-    });
+    await logTx({ action: "claim_poap", status: "success", txHash: result.txHash, payload, rpcResponse: result.rpcResponse, signedEnvelope: result.envelopeXdr });
+    res.json({ txHash: result.txHash, rpcResponse: result.rpcResponse, signedEnvelope: result.envelopeXdr });
   } catch (error) {
-    await logTx({
-      action: "claim_poap",
-      status: "error",
-      error: error.message || String(error),
-      payload,
-    });
+    await logTx({ action: "claim_poap", status: "error", error: error.message || String(error), payload });
     res.status(500).json({ error: error.message || String(error) });
   }
 });
 
 app.get("/contract/admin", async (_req, res) => {
-  if (isMock) {
-    return res.json({ admin: "MOCK-ADMIN" });
-  }
+  if (isMock) return res.json({ admin: "MOCK-ADMIN" });
 
   try {
     const admin = await getAdminAddress({
@@ -530,19 +460,13 @@ app.get("/contract/admin", async (_req, res) => {
     await logTx({ action: "get_admin", status: "success", payload: { admin } });
     res.json({ admin });
   } catch (error) {
-    await logTx({
-      action: "get_admin",
-      status: "error",
-      error: error.message || String(error),
-    });
+    await logTx({ action: "get_admin", status: "error", error: error.message || String(error) });
     res.status(500).json({ error: error.message || String(error) });
   }
 });
 
 app.get("/contract/event-count", async (_req, res) => {
-  if (isMock) {
-    return res.json({ eventCount: 0 });
-  }
+  if (isMock) return res.json({ eventCount: 0 });
 
   try {
     const eventCount = await getEventCount({
@@ -554,19 +478,13 @@ app.get("/contract/event-count", async (_req, res) => {
     await logTx({ action: "get_event_count", status: "success", payload: { eventCount } });
     res.json({ eventCount });
   } catch (error) {
-    await logTx({
-      action: "get_event_count",
-      status: "error",
-      error: error.message || String(error),
-    });
+    await logTx({ action: "get_event_count", status: "error", error: error.message || String(error) });
     res.status(500).json({ error: error.message || String(error) });
   }
 });
 
 app.get("/events/onchain", async (req, res) => {
-  if (isMock) {
-    return res.json({ events: [] });
-  }
+  if (isMock) return res.json({ events: [] });
 
   const creatorFilter = (req.query.creator || "").toString().toLowerCase();
 
@@ -598,10 +516,7 @@ app.get("/events/onchain", async (req, res) => {
           }),
         ]);
 
-        if (
-          creatorFilter &&
-          details.creator.toLowerCase() !== creatorFilter
-        ) {
+        if (creatorFilter && details.creator.toLowerCase() !== creatorFilter) {
           continue;
         }
 
@@ -620,13 +535,9 @@ app.get("/events/onchain", async (req, res) => {
           mintedCount,
         });
       } catch (innerError) {
-        console.error(
-          `Failed to fetch on-chain data for event ${eventId}:`,
-          innerError,
-        );
+        console.error(`Failed to fetch on-chain data for event ${eventId}:`, innerError);
       }
     }
-
     res.json({ events });
   } catch (error) {
     console.error("Error fetching on-chain events:", error);
@@ -636,18 +547,9 @@ app.get("/events/onchain", async (req, res) => {
 
 app.get("/claimers/:claimer/events", async (req, res) => {
   const claimer = (req.params.claimer || "").toString().trim();
-
-  if (!claimer) {
-    return res.status(400).json({ error: "claimer is required" });
-  }
-
-  if (isMock) {
-    return res.json({ events: [] });
-  }
-
-  if (!ADMIN_SECRET) {
-    return res.status(500).json({ error: "Admin credentials not configured" });
-  }
+  if (!claimer) return res.status(400).json({ error: "claimer is required" });
+  if (isMock) return res.json({ events: [] });
+  if (!ADMIN_SECRET) return res.status(500).json({ error: "Admin credentials not configured" });
 
   try {
     const eventIds = await getAllEventIds({
@@ -658,7 +560,6 @@ app.get("/claimers/:claimer/events", async (req, res) => {
     });
 
     const claimedEvents = [];
-
     for (const eventId of eventIds) {
       try {
         const hasClaimed = await hasClaimedEvent({
@@ -670,9 +571,7 @@ app.get("/claimers/:claimer/events", async (req, res) => {
           eventId,
         });
 
-        if (!hasClaimed) {
-          continue;
-        }
+        if (!hasClaimed) continue;
 
         const [details, mintedCount, tokenId] = await Promise.all([
           getEventDetails({
@@ -697,10 +596,7 @@ app.get("/claimers/:claimer/events", async (req, res) => {
             claimer,
             eventId,
           }).catch((tokenError) => {
-            console.warn(
-              `Unable to fetch tokenId for event ${eventId} and claimer ${claimer}:`,
-              tokenError.message || tokenError,
-            );
+            console.warn(`Unable to fetch tokenId for event ${eventId} and claimer ${claimer}:`, tokenError.message || tokenError);
             return undefined;
           }),
         ]);
@@ -721,13 +617,9 @@ app.get("/claimers/:claimer/events", async (req, res) => {
           tokenId,
         });
       } catch (eventError) {
-        console.error(
-          `Failed to resolve claimed event ${eventId} for claimer ${claimer}:`,
-          eventError,
-        );
+        console.error(`Failed to resolve claimed event ${eventId} for claimer ${claimer}:`, eventError);
       }
     }
-
     res.json({ events: claimedEvents });
   } catch (error) {
     console.error("Error fetching claimed events:", error);
@@ -738,26 +630,23 @@ app.get("/claimers/:claimer/events", async (req, res) => {
 function normalizePort(value) {
   const portNumber = Number(value);
   if (Number.isNaN(portNumber)) {
-    return 4000;
+    return 8080;
   }
   return portNumber;
 }
 
 export function startServer(customPort) {
-  const port = normalizePort(
-    typeof customPort !== "undefined" ? customPort : PORT
-  );
-  const server = app.listen(port, () => {
-    console.log(`SPOT admin backend listening on http://localhost:${server.address().port}`);
+  const port = normalizePort(typeof customPort !== "undefined" ? customPort : PORT);
+  // Escuchar en 0.0.0.0 es vital para Docker/Cloud Run
+  const server = app.listen(port, "0.0.0.0", () => {
+    console.log(`SPOT admin backend listening on port ${port} 🚀`);
   });
   return server;
 }
 
-// Only start server if not in serverless environment (Vercel, etc.)
-// Vercel will handle the server lifecycle
-if (!isTestEnv && !process.env.VERCEL) {
+// Arranca el server si no es test
+if (!isTestEnv) {
   startServer();
 }
 
 export { app };
-
