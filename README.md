@@ -902,7 +902,7 @@ SPOT es desarrollado por un equipo apasionado de desarrolladores:
 ### André Landinez
 **Desarrollo y Smart Contracts**
 
-<img src="blockotitos/public/images/team/andréLandinez.jpg" alt="André Landinez" width="150" style="border-radius: 50%; margin: 10px;">
+<img src="blockotitos/public/images/team/andreLandinez.jpg" alt="André Landinez" width="150" style="border-radius: 50%; margin: 10px;">
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/andr%C3%A9-landinez-535298380/)
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=flat&logo=telegram&logoColor=white)](https://t.me/andrethth)
