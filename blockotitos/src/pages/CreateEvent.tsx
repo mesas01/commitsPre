@@ -232,10 +232,28 @@ const CreateEvent: React.FC = () => {
         }, 500);
       } catch (error: any) {
         console.error("Error al crear evento:", error);
+        
+        // Mensaje más específico según el tipo de error
+        let errorTitle = "Error al crear evento";
+        let errorMessage = "No pudimos crear el evento. Copia el detalle para soporte.";
+        
+        if (error?.message) {
+          if (error.message.includes("VITE_BACKEND_URL") || error.message.includes("localhost")) {
+            errorTitle = "Error de configuración";
+            errorMessage = "El frontend no está configurado para conectarse al backend. Verifica que la variable VITE_BACKEND_URL esté configurada en Vercel.";
+          } else if (error.message.includes("timeout") || error.message.includes("cancelada")) {
+            errorTitle = "Error de conexión";
+            errorMessage = "El backend no respondió a tiempo. Verifica que el backend esté funcionando en Google Cloud.";
+          } else if (error.message.includes("No se pudo conectar")) {
+            errorTitle = "Error de conexión";
+            errorMessage = error.message;
+          }
+        }
+        
         showNotification({
           type: "error",
-          title: "Error al crear evento",
-          message: "No pudimos crear el evento. Copia el detalle para soporte.",
+          title: errorTitle,
+          message: errorMessage,
           copyText: buildErrorDetail(error),
         });
       } finally {
@@ -243,10 +261,28 @@ const CreateEvent: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Error al crear evento:", error);
+      
+      // Mensaje más específico según el tipo de error
+      let errorTitle = "Error al crear evento";
+      let errorMessage = "No pudimos crear el evento. Copia el detalle para soporte.";
+      
+      if (error?.message) {
+        if (error.message.includes("VITE_BACKEND_URL") || error.message.includes("localhost")) {
+          errorTitle = "Error de configuración";
+          errorMessage = "El frontend no está configurado para conectarse al backend. Verifica que la variable VITE_BACKEND_URL esté configurada en Vercel.";
+        } else if (error.message.includes("timeout") || error.message.includes("cancelada")) {
+          errorTitle = "Error de conexión";
+          errorMessage = "El backend no respondió a tiempo. Verifica que el backend esté funcionando en Google Cloud.";
+        } else if (error.message.includes("No se pudo conectar")) {
+          errorTitle = "Error de conexión";
+          errorMessage = error.message;
+        }
+      }
+      
       showNotification({
         type: "error",
-        title: "Error al crear evento",
-        message: "No pudimos crear el evento. Copia el detalle para soporte.",
+        title: errorTitle,
+        message: errorMessage,
         copyText: buildErrorDetail(error),
       });
     }
@@ -269,8 +305,8 @@ const CreateEvent: React.FC = () => {
               variant="primary"
               size="lg"
               onClick={() => navigate("/")}
-              className="bg-stellar-gold text-stellar-black rounded-full px-8 py-3 font-semibold"
-              >
+              className="bg-stellar-gold text-stellar-black"
+            >
               Ir a Home
             </Button>
           </div>

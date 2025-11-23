@@ -14,7 +14,6 @@ import {
   upsertClaimedSpot,
 } from "../utils/claimedSpots";
 import { fetchClaimedEventsByClaimer } from "../util/backend";
-import { connectWallet } from "../util/wallet";
 
 const mockSpots: SpotData[] = [
   {
@@ -62,14 +61,6 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
   const isConnected = !!address;
   const [claimedSpots, setClaimedSpots] = useState<SpotData[]>([]);
-
-  // Scroll al inicio cuando se conecta la wallet
-  useEffect(() => {
-    if (address) {
-      // Scroll suave hacia arriba cuando se conecta la wallet
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [address]);
 
   useEffect(() => {
     if (!address) {
@@ -542,7 +533,7 @@ const Home: React.FC = () => {
                     Conecta tu wallet de Stellar para ver tu colección de SPOTs y reclamar nuevos.
                   </Text>
                   <Button
-                    onClick={() => void connectWallet()}
+                    onClick={() => navigate("/profile")}
                     variant="primary"
                     size="lg"
                     className="bg-stellar-gold text-stellar-black hover:bg-yellow-400 font-semibold rounded-full px-10 py-4 shadow-lg hover:shadow-xl transition-all"

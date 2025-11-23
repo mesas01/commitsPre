@@ -271,8 +271,8 @@ const Mint: React.FC = () => {
               variant="primary"
               size="lg"
               onClick={() => navigate("/")}
-              className="bg-stellar-gold text-stellar-black rounded-full px-8 py-3 font-semibold"
-              >
+              className="bg-stellar-gold text-stellar-black"
+            >
               Ir a Home
             </Button>
           </div>

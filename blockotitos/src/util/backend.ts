@@ -1,5 +1,17 @@
 const envBaseUrl = import.meta.env.VITE_BACKEND_URL;
-const backendBaseUrl = (envBaseUrl || "http://localhost:4000").replace(/\/$/, "");
+// URL de producción en Google Cloud Run
+const PRODUCTION_BACKEND_URL = "https://commitspre-243000873240.us-central1.run.app";
+// Fallback: usar producción en producción, localhost solo en desarrollo
+const fallbackUrl = import.meta.env.PROD ? PRODUCTION_BACKEND_URL : "http://localhost:4000";
+const backendBaseUrl = (envBaseUrl || fallbackUrl).replace(/\/$/, "");
+
+// Log de depuración
+if (import.meta.env.DEV) {
+  console.log("[Backend] URL configurada:", backendBaseUrl);
+  console.log("[Backend] Variable de entorno VITE_BACKEND_URL:", envBaseUrl || "(no configurada, usando fallback)");
+} else if (import.meta.env.PROD && !envBaseUrl) {
+  console.warn("[Backend] VITE_BACKEND_URL no configurada en producción, usando URL por defecto:", backendBaseUrl);
+}
 
 const defaultHeaders = {
   "Content-Type": "application/json",
@@ -68,7 +80,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     }
 
     try {
-      const response = await fetch(`${backendBaseUrl}${path}`, {
+      const fullUrl = `${backendBaseUrl}${path}`;
+      if (import.meta.env.DEV) {
+        console.log(`[Backend] Intento ${attempt}/${maxAttempts}: ${fullUrl}`);
+      }
+      
+      const response = await fetch(fullUrl, {
         ...options,
         headers,
         signal: controller?.signal ?? options.signal,
@@ -90,6 +107,24 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       return (await response.json()) as T;
     } catch (error) {
       lastError = error;
+      
+      // Detectar errores específicos de conexión
+      if (isAbortError(error)) {
+        const isLocalhost = backendBaseUrl.includes("localhost") || backendBaseUrl.includes("127.0.0.1");
+        const errorMessage = isLocalhost
+          ? `No se pudo conectar al backend. La URL configurada es ${backendBaseUrl}, pero parece que estás en producción. Por favor, configura la variable de entorno VITE_BACKEND_URL en Vercel con la URL de tu backend en Google Cloud.`
+          : `La petición al backend (${backendBaseUrl}) fue cancelada por timeout. Verifica que el backend esté funcionando y accesible.`;
+        throw new Error(errorMessage);
+      }
+      
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        const isLocalhost = backendBaseUrl.includes("localhost") || backendBaseUrl.includes("127.0.0.1");
+        const errorMessage = isLocalhost
+          ? `No se pudo conectar al backend en ${backendBaseUrl}. En producción, configura VITE_BACKEND_URL en Vercel con la URL de tu backend en Google Cloud.`
+          : `No se pudo conectar al backend en ${backendBaseUrl}. Verifica que el backend esté funcionando y que la URL sea correcta.`;
+        throw new Error(errorMessage);
+      }
+      
       if (!isRetryableError(error) || attempt >= maxAttempts) {
         throw error instanceof Error
           ? error
@@ -103,6 +138,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
         clearTimeout(timeoutId);
       }
     }
+  }
+
+  // Si llegamos aquí, todos los intentos fallaron
+  if (isAbortError(lastError)) {
+    const isLocalhost = backendBaseUrl.includes("localhost") || backendBaseUrl.includes("127.0.0.1");
+    const errorMessage = isLocalhost
+      ? `No se pudo conectar al backend después de ${maxAttempts} intentos. La URL configurada es ${backendBaseUrl}, pero parece que estás en producción. Por favor, configura la variable de entorno VITE_BACKEND_URL en Vercel con la URL de tu backend en Google Cloud.`
+      : `La petición al backend (${backendBaseUrl}) fue cancelada después de ${maxAttempts} intentos. Verifica que el backend esté funcionando y accesible.`;
+    throw new Error(errorMessage);
   }
 
   throw lastError instanceof Error
@@ -173,6 +217,32 @@ export function claimEventRequest(payload: ClaimEventPayload) {
 
 export function getBackendBaseUrl() {
   return backendBaseUrl;
+}
+
+// Función de utilidad para verificar la conexión con el backend
+export async function checkBackendConnection(): Promise<{ connected: boolean; url: string; error?: string }> {
+  try {
+    const response = await fetch(`${backendBaseUrl}/health`, {
+      method: "GET",
+      signal: AbortSignal.timeout(5000), // 5 segundos de timeout para el health check
+    });
+    
+    if (response.ok) {
+      return { connected: true, url: backendBaseUrl };
+    } else {
+      return { 
+        connected: false, 
+        url: backendBaseUrl, 
+        error: `Backend respondió con status ${response.status}` 
+      };
+    }
+  } catch (error) {
+    return { 
+      connected: false, 
+      url: backendBaseUrl, 
+      error: error instanceof Error ? error.message : String(error) 
+    };
+  }
 }
 
 export async function fetchMintedCount(eventId: number) {
