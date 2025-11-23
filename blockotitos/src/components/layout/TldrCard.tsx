@@ -35,9 +35,11 @@ const TldrCard: React.FC<TldrCardProps> = ({
 
   return (
     <aside className={containerClassName}>
-      <Text as="span" size="xs" className="brand-eyebrow text-stellar-navy/70">
-        {label}
-      </Text>
+      {label && (
+        <Text as="span" size="xs" className="brand-eyebrow text-stellar-navy/70">
+          {label}
+        </Text>
+      )}
 
       {title && (
         <Text as="h3" size="md" className="text-xl font-headline text-stellar-black mt-2">

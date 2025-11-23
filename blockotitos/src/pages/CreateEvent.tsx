@@ -304,6 +304,7 @@ const CreateEvent: React.FC = () => {
               </Text>
             </div>
                 <TldrCard
+                  label=""
                   summary="Antes de completar el formulario, asegúrate de tener arte, fechas y métodos de entrega listos."
                   bullets={[
                     { label: "Visual", detail: "Usa imágenes humanas y resalta highlights." },

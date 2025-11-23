@@ -548,6 +548,7 @@ const Home: React.FC = () => {
             <section className="mb-16">
               <div className="max-w-5xl mx-auto">
                 <TldrCard
+                  label=""
                   summary="SPOT convierte tus eventos en coleccionables digitales verificados. Configura arte, cupos y métricas desde un mismo panel."
                   bullets={[
                     {
